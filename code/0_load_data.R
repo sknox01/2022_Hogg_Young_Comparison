@@ -87,12 +87,93 @@ data.Hogg$WTH[firstNonNA:lastNonNA] <- na.approx(data.Hogg$WTH[firstNonNA:lastNo
 df.Hogg <- data.Hogg[,c('site','DATE','GPP_f', 'Reco','pot_rad','SWIN_1_1_1','VPD.x','air_p_mean','P_RAIN_1_1_1','TA_1_1_1','TS_1_1_1','TS_2_1_1','TS_3_1_1','WTH','LE_f','NEE_uStar_f','FCH4_gf_RF','FCH4')]
 df.Young <- data.Young[,c('site','DATE','GPP_f', 'Reco','pot_rad','SWIN_1_1_1','VPD.x','air_p_mean','P_RAIN_1_1_1','TA_1_1_1','TS_1_1_1','TS_2_1_1','TS_3_1_1','WTH','LE_f','NEE_uStar_f','FCH4_gf_RF','FCH4')]
 
-#Saving the file:
-write.table(df.Hogg, file = here("output",'Hogg.csv'),row.names=FALSE,sep='\t') 
-write.table(df.Young, file = here("output",'Young.csv'),row.names=FALSE,sep='\t') 
+#Saving the data tp csv (for Matt)
+#write.table(df.Hogg, file = here("output",'Hogg.csv'),row.names=FALSE,sep='\t') 
+#write.table(df.Young, file = here("output",'Young.csv'),row.names=FALSE,sep='\t') 
 
 # Merge data frames
 data <- dplyr::bind_rows(df.Hogg,df.Young)
 
 # Convert DATE from character to date
 data$DATE <- as.POSIXct(data$DATE, format =  "%Y-%m-%d %H:%M:%OS", tz ='UTC')
+
+# save 30 min data
+save(data,file="output/30min_data.Rda")
+
+# Group by site
+data.site <- data %>%
+  group_by(site)
+
+# Plot met by site
+p <- ggplot() +
+  geom_point(data = data.site, aes(x = DATE, y = pot_rad, color = as.factor(site)), size = 1)
+toWebGL(ggplotly(p))
+
+p <- ggplot() +
+  geom_point(data = data.site, aes(x = DATE, y = WTH, color = as.factor(site)), size = 1)
+toWebGL(ggplotly(p))
+
+p <- ggplot() +
+  geom_point(data = data.site, aes(x = DATE, y = SWIN_1_1_1, color = as.factor(site)), size = 1) +
+  geom_line(data = data.site, aes(x = DATE, y = pot_rad, color = as.factor(site)), size = 1)
+toWebGL(ggplotly(p))
+
+p <- ggplot() +
+  geom_point(data = data.site, aes(x = DATE, y = P_RAIN_1_1_1, color = as.factor(site)), size = 1)
+toWebGL(ggplotly(p))
+
+p <- ggplot() +
+  geom_point(data = data.site, aes(x = DATE, y = TA_1_1_1, color = as.factor(site)), size = 1)
+toWebGL(ggplotly(p))
+
+p <- ggplot() +
+  geom_point(data = data.site, aes(x = DATE, y = TS_1_1_1, color = as.factor(site)), size = 1)
+toWebGL(ggplotly(p))
+
+p <- ggplot() +
+  geom_point(data = data.site, aes(x = DATE, y = TS_2_1_1, color = as.factor(site)), size = 1)
+toWebGL(ggplotly(p))
+
+p <- ggplot() +
+  geom_point(data = data.site, aes(x = DATE, y = TS_3_1_1, color = as.factor(site)), size = 1)
+toWebGL(ggplotly(p))
+
+p <- ggplot() +
+  geom_point(data = data.site, aes(x = DATE, y = VPD.x, color = as.factor(site)), size = 1)
+toWebGL(ggplotly(p))
+
+p <- ggplot() +
+  geom_point(data = data.site, aes(x = DATE, y = air_p_mean, color = as.factor(site)), size = 1)
+toWebGL(ggplotly(p))
+
+# Plot CO2 fluxes by site
+p <- ggplot() +
+  geom_point(data = data.site, aes(x = DATE, y = NEE_uStar_f, color = as.factor(site)), size = 1)
+toWebGL(ggplotly(p))
+
+# Plot FCH4 fluxes by site
+p <- ggplot() +
+  geom_point(data = data.site, aes(x = DATE, y = FCH4_gf_RF, color = as.factor(site)), size = 1)
+toWebGL(ggplotly(p))
+
+# compute daily mean fluxes (using filled data for now)
+conv_co2 <- 12.01*(60*60*24)/(10^6)
+conv_ch4 <- 12.01*(60*60*24)/(10^6)
+data.daily <- data %>%
+  mutate(year = year(DATE),
+         jday = yday(DATE)) %>%
+  group_by(site,year,jday) %>%
+  dplyr::summarize(FC_gC = mean(NEE_uStar_f, na.rm = TRUE)*conv_co2,
+                   GPP_f_gC = mean(GPP_f, na.rm = TRUE)*conv_co2,
+                   Reco_gC = mean(Reco, na.rm = TRUE)*conv_co2,
+                   FCH4_gC = mean(FCH4_gf_RF, na.rm = TRUE)*conv_ch4,
+                   WTH = mean(WTH, na.rm = TRUE),
+                   TS = mean(TS_2_1_1, na.rm = TRUE),
+                   SW_IN = mean(SWIN_1_1_1, na.rm = TRUE),
+                   VPD = mean(VPD.x, na.rm = TRUE),
+                   LE_f = mean(LE_f, na.rm = TRUE),
+                   date = first(DATE))
+
+# save daily data
+save(data.daily,file="output/daily_data.Rda")
+
