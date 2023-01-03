@@ -29,5 +29,26 @@ library(filesstrings)
 
 Many quantitative relations in the environmental sciences, and specifically in watershed 
 
+<!-- {{< pagebreak >}} -->
+
+# Introduction
+
+Wetlands are important global carbon stores, accounting for 20-30% of the total terrestrial carbon (C) storage in soils despite only covering 4-6% of the Earth's land surface (refs). While peatlands are responsible for the majority of C stored in wetland soils, freshwater mineral soil wetlands are also globally significant C stores. Freshwater mineral soil (FWMS) wetlands in North America account for approximately 40 Gt (or 18%) of the wetland C pool (Bridgham et al. 2006). Furthermore, FWMS wetlands are typically much more productive compared to peat forming wetlands (Mitsch and Gosselink 2000; Rocha and Goulden 2009). However, the same conditions which allow FWMS wetlands to accumulate large amounts of C also promote the production and emission of methane (CH4). On a per unit basis, CH4 fluxes for FWMS wetlands such as marshes are among the highest reported across all wetland types (Knox et al., 2019; Treat et al. 2018).
+
+The North American Prairie Pothole Region (PPR) extends from north-west Iowa in the USA into central Alberta in Canada and covers an area of ~800,000 km2 (Badiou et al., 2011). This region is dotted with millions of FWMS wetland, generally refereed to as prairie pothole wetlands. Relative to other wetland ecosystems such as swamps, bogs, and northern peatlands, fewer studies have focused on prairie pothole wetlands despite their high C sequestration capacity and potential to emit considerable CH4 (Bansal et al., 2016).
+
+As   a   result   prairie   potholewetlands  are  potential  hotspots  for  methane  emis-sions.  
+
+
+While there have been 
+
+First EC study....
+
+
+# Methods
+
+## Site Description
+
+Get more from Pascal.
 
 

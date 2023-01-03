@@ -93,6 +93,7 @@ for (i in 1:length(yrs)) {
     firstNonNA <- min(NonNAindex)
     lastNonNA <- max(NonNAindex)
     
+    data.Young$pH_interp[firstNonNA:lastNonNA] <- na.approx(data.Young$pH_interp[firstNonNA:lastNonNA])
     data.Young$Specific_cond_interp[firstNonNA:lastNonNA] <- na.approx(data.Young$Specific_cond_interp[firstNonNA:lastNonNA])
     data.Young$DOC_interp[firstNonNA:lastNonNA] <- na.approx(data.Young$DOC_interp[firstNonNA:lastNonNA])
     data.Young$TDN_interp[firstNonNA:lastNonNA] <- na.approx(data.Young$TDN_interp[firstNonNA:lastNonNA])
@@ -180,6 +181,7 @@ for (i in 1:length(yrs)) {
     firstNonNA <- min(NonNAindex)
     lastNonNA <- max(NonNAindex)
     
+    data.Hogg$pH_interp[firstNonNA:lastNonNA] <- na.approx(data.Hogg$pH_interp[firstNonNA:lastNonNA])
     data.Hogg$Specific_cond_interp[firstNonNA:lastNonNA] <- na.approx(data.Hogg$Specific_cond_interp[firstNonNA:lastNonNA])
     data.Hogg$DOC_interp[firstNonNA:lastNonNA] <- na.approx(data.Hogg$DOC_interp[firstNonNA:lastNonNA])
     data.Hogg$TDN_interp[firstNonNA:lastNonNA] <- na.approx(data.Hogg$TDN_interp[firstNonNA:lastNonNA])
@@ -192,14 +194,15 @@ for (i in 1:length(yrs)) {
   }
 }
 
-# Export subset of data for Matt F. - NOTE THAT WTD IS MISSING IN THE WINTER - FIGURE OUT THE BEST WAY TO HANDLE THAT
-df.Hogg <- data.Hogg[,c('site','DATE','GPP_f', 'Reco','pot_rad','SWIN_1_1_1','PPFD_1_1_1','VPD.x','air_p_mean','P_RAIN_1_1_1','TA_1_1_1','TS_1_1_1','TS_2_1_1','TS_3_1_1','WTD','LE_f','NEE_uStar_f','FCH4_f','FCH4_gf_RF','FCH4','SO4_interp','TP_interp')]
+# Export subset of data for Matt F. - NOTE THAT WTD/WQ IS MISSING IN THE WINTER - FIGURE OUT THE BEST WAY TO HANDLE THAT. Should we consider just an average annual value for WQ parameters
+# NOTE- SEND WITH CORRECTED RADIATION DATA ONCE DARIAN FIXES IT & update FCH4 data
+df.Hogg <- data.Hogg[,c('site','DATE','GPP_f', 'Reco','pot_rad','SWIN_1_1_1','VPD.x','air_p_mean','P_RAIN_1_1_1','TA_1_1_1','TS_1_1_1','TS_2_1_1','TS_3_1_1','WTD','LE_f','NEE_uStar_f','FCH4_f','FCH4',"pH_interp","Specific_cond_interp","DOC_interp","TDN_interp","NO3_NO2_N_interp","NH4_N_interp","DRP_interp","TDP_interp","TP_interp","ABS_280nm_interp","SO4_interp")]
 # Replace FCH4_f with FCH4_gf_RF
-df.Young <- data.Young[,c('site','DATE','GPP_f', 'Reco','pot_rad','SWIN_1_1_1','PPFD_1_1_1','VPD.x','air_p_mean','P_RAIN_1_1_1','TA_1_1_1','TS_1_1_1','TS_2_1_1','TS_3_1_1','WTD','LE_f','NEE_uStar_f','FCH4_f','FCH4','SO4_interp','TP_interp')]
+df.Young <- data.Young[,c('site','DATE','GPP_f', 'Reco','pot_rad','SWIN_1_1_1','VPD.x','air_p_mean','P_RAIN_1_1_1','TA_1_1_1','TS_1_1_1','TS_2_1_1','TS_3_1_1','WTD','LE_f','NEE_uStar_f','FCH4_f','FCH4',"pH_interp","Specific_cond_interp","DOC_interp","TDN_interp","NO3_NO2_N_interp","NH4_N_interp","DRP_interp","TDP_interp","TP_interp","ABS_280nm_interp","SO4_interp")]
 
 #Saving the data tp csv (for Matt)
-#write.table(df.Hogg, file = here("output",'Hogg.csv'),row.names=FALSE,sep='\t') 
-#write.table(df.Young, file = here("output",'Young.csv'),row.names=FALSE,sep='\t') 
+write.table(df.Hogg, file = here("output",'Hogg.csv'),row.names=FALSE,sep='\t') 
+write.table(df.Young, file = here("output",'Young.csv'),row.names=FALSE,sep='\t') 
 
 # Merge data frames
 data <- dplyr::bind_rows(df.Hogg,df.Young)
@@ -251,6 +254,7 @@ p <- ggplot() +
   geom_point(data = data.site, aes(x = DATE, y = TA_1_1_1, color = as.factor(site)), size = 1)
 toWebGL(ggplotly(p))
 
+# Check soil temperature in more detail....
 p <- ggplot() +
   geom_point(data = data.site, aes(x = DATE, y = TS_1_1_1, color = as.factor(site)), size = 1)
 toWebGL(ggplotly(p))
@@ -278,6 +282,10 @@ toWebGL(ggplotly(p))
 
 # Plot FCH4 fluxes by site
 p <- ggplot() +
+  geom_point(data = data.site, aes(x = DATE, y = FCH4, color = as.factor(site)), size = 1)
+toWebGL(ggplotly(p))
+
+p <- ggplot() +
   geom_point(data = data.site, aes(x = DATE, y = FCH4_gf_RF, color = as.factor(site)), size = 1)
 toWebGL(ggplotly(p))
 
@@ -286,8 +294,13 @@ p <- ggplot() +
   geom_point(data = data.site, aes(x = DATE, y = FCH4_f, color = as.factor(site)), size = 1)
 toWebGL(ggplotly(p))
 
+# Plot water quality variables
 p <- ggplot() +
   geom_point(data = data.site, aes(x = DATE, y = SO4_interp, color = as.factor(site)), size = 1)
+toWebGL(ggplotly(p))
+
+p <- ggplot() +
+  geom_point(data = data.site, aes(x = DATE, y = ABS_280nm_interp, color = as.factor(site)), size = 1)
 toWebGL(ggplotly(p))
 
 # compute daily mean fluxes (using filled data for now)
