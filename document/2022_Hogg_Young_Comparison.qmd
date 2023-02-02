@@ -33,16 +33,54 @@ Many quantitative relations in the environmental sciences, and specifically in w
 
 # Introduction
 
-Wetlands are important global carbon stores, accounting for 20-30% of the total terrestrial carbon (C) storage in soils despite only covering 4-6% of the Earth's land surface (refs). While peatlands are responsible for the majority of C stored in wetland soils, freshwater mineral soil wetlands are also globally significant C stores. Freshwater mineral soil (FWMS) wetlands in North America account for approximately 40 Gt (or 18%) of the wetland C pool (Bridgham et al. 2006). Furthermore, FWMS wetlands are typically much more productive compared to peat forming wetlands (Mitsch and Gosselink 2000; Rocha and Goulden 2009). However, the same conditions which allow FWMS wetlands to accumulate large amounts of C also promote the production and emission of methane (CH4). On a per unit basis, CH4 fluxes for FWMS wetlands such as marshes are among the highest reported across all wetland types (Knox et al., 2019; Treat et al. 2018).
+Wetlands are important global carbon stores, accounting for 20-30% of the total terrestrial carbon (C) storage in soils despite only covering 4-6% of the Earth's land surface (refs). While peatlands are responsible for the majority of C stored in wetland soils, freshwater mineral soil wetlands are also globally significant C stores. Freshwater mineral soil (FWMS) wetlands in North America account for approximately 40 Gt (or 18%) of the wetland C pool (Bridgham et al. 2006). Furthermore, FWMS wetlands are typically much more productive compared to peat forming wetlands (Mitsch and Gosselink 2000; Rocha and Goulden 2009). However, the same conditions which allow FWMS wetlands to accumulate large amounts of C also promote the production and emission of methane ($CH_4$). On a per unit basis, $CH_4$ fluxes for FWMS wetlands such as marshes are among the highest reported across all wetland types (Knox et al., 2019; Treat et al. 2018).
 
-The North American Prairie Pothole Region (PPR) extends from north-west Iowa in the USA into central Alberta in Canada and covers an area of ~800,000 km2 (Badiou et al., 2011). This region is dotted with millions of FWMS wetland, generally refereed to as prairie pothole wetlands. Relative to other wetland ecosystems such as swamps, bogs, and northern peatlands, fewer studies have focused on prairie pothole wetlands despite their high C sequestration capacity and potential to emit considerable CH4 (Bansal et al., 2016).
+The North American Prairie Pothole Region (PPR) extends from north-west Iowa in the USA into central Alberta in Canada and covers an area of ~800,000 km2 (Badiou et al., 2011). This region is dotted with millions of FWMS wetlands, generally refereed to as prairie pothole wetlands. Relative to other wetland ecosystems such as swamps, bogs, and northern peatlands, fewer studies have focused on prairie pothole wetlands despite their high C sequestration capacity and potential to emit considerable $CH_4$ (Bansal et al., 2016).
 
-As   a   result   prairie   potholewetlands  are  potential  hotspots  for  methane  emis-sions.  
+Globally, average C sequestration in established temperate FWMSWs is estimated to range between 100 and 250 $gC~m^{-2}~yr^{-1}$ (Bernal and Mitsch, 2012; Zhang et al., 2016; Lu et al., 2017). While FWMSWs account for approximately 39% of total wetland area globally, they only account for approximately 12% of total wetland area within Canada. Although peatlands account for the majority of wetland area in Canada, it is estimated that ~20 million ha of FWMSWs have been lost in Canada since European settlement (~1800), compared to 1.4 million ha of peatlands (National Wetlands Working Group (NWWG) 1988), resulting in significant emissions of $CO_2$ to the atmosphere (refs). Conversely, restoring FWMSWs can reverse soil C loss and sequester atmospheric $CO_2$ (refs). Several studies have shown that restored wetlands in the Prairie Pothole Region of North America are particularly proficient at sequestering C (Gleason et al., 2006), with C sequestration rates ranging between 110-305 $gC~m^{-2}~yr^{-1}$ (Euliss et al., 2006; Badiou et al., 2011; Tangen and Bansal, 2020). These high C sequestration rates are driven by high productivity and low decomposition rates created by anoxic conditions in FWMSW ecosystems of the PPR.      
 
 
-While there have been 
 
-First EC study....
+Estimates of C sequestration and CH4 emissions
+
+
+Pennock et al. 2010
+ 
+ semi-permanent pond were low (ranging from 0.04 to 3.33 g CH4m−2yr-1) butemissions from landscape elements of the ephemeral ponds were substantially higher, with a maximumof 138.6 g CH4m−2yr−1(or approximately 110 g CH4m−2yr−1when corrected for mid-day sampling bias)from basin centers of these ponds in 2005. 
+ 
+ a large semi-permanent pond andfive ephemeral freshwater mineral soilwetlands at the St. Denis National Wildlife Area (SDNWA) near Saskatoon, Saskatchewan, Canada. The average annual CH4emissions averaged across the threeelements of the ephemeral ponds at SDNWA were 54.8 g CH4m−2yr−1in 2005 and 32.4 g CH4m−2yr−1in 2006
+ 
+ Bansal et al., 2016
+ 
+ Methane flux rates were among the highest reported for freshwater wet-lands, and had considerable spatial and temporal variation
+
+Badiou et al, 2011
+Our  results  indicatethat  methane  emissions  from  seasonal,  semi-perma-nent,  and  permanent  prairie  pothole  wetlands  are quite  high  while  nitrous  oxide emissions  from thesesites are  fairly low
+ 
+Impact of salinity on CH4 emissions
+
+Methane emissions were significantly inversely correlated to SO42concentrations of the pond water,which are in turn related to the balance between surface runoff and groundwater inputs into the ponds Pennock et al. 2010
+
+Bansal et al., 2016
+Methane emission rates from permanent wetlandswere less sensitive to changes in temperature and waterdepth compared to temporary wetlands, likely due to highersulfate concentrations in permanent wetlands.
+
+Due to undulating topography andgroundwater interactions with sulfur and carbonate rich gla-cial till, PPR wetlands have a wide range of sulfate-dominatedsalinities (Winter and Rosenberry1998;Goldhaberetal.2014). Sulfate-reducing bacteria outcompete methanogensfor principal substrates such as hydrogen and acetate (Abramand Nedwell1978  ), and high sulfate concentrations have beenlinked to reduced methane emissions in a number of coastaland freshwater wetlands (Blodau et al.2007  ; Pennock et al.2010  ; Poffenbarger et al.2011   ; Dodla et al.2012  
+
+Also, waters of the permanentwetlands in the PPR tend to contain relatively high sulfateconcentrations (Phillips and Beeri2008;Pennocketal.2010  ), which suppresses methane production. Thus, chemicalvariation among PPR wetlands may play a key role in moder-ating greenhouse gas emissions from wetlands, especiallyfrom those with longer periods of ponding
+
+Badiou et al., 2011
+Additionally,  thedilution  effect  resulting  from  this  increase  in  waterlevel greatly reduced concentrations of nutrients andmajor anions and cations. This is important as sulfatereduction  is  known  to  at  least  partially  inhibit  CH4
+
+production   (Gauci   et   al.2004).   A   recent   studyconducted  in  ephemeral  prairie  pothole  wetlands  inSK  by  Pennock  et  al.  (2010)  has  demonstrated  thatCH4emissions  decrease  as  sulfate  (SO42-)  concen-trations  increase.  Rapid  increases  in  CH4emissionsassociated  with  increased  spring  runoff  leading  to
+
+depletion   in   SO42-concentrations   has   also   beendocumented   by   Phipps   (2006)   for   a   permanentwetland  located  in  the  St.  Denis  National  WildlifeArea in Saskatchewan, Canada
+
+
+
+Mainly chambers
+
+This is the first EC study 
+
 
 
 # Methods

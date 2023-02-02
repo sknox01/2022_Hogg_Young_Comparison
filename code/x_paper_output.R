@@ -10,7 +10,7 @@ toWebGL(ggplotly(p))
 p <- ggplot() +
   geom_point(data = data.daily, aes(x = as.Date(date), y = FC_gC, color = factor(site)), size = 1) + scale_x_date(date_labels = "%b %y") +
   xlab('') + ylab(expression(NEE~(g~C~m^-2~d^-1))) +
-  scale_color_manual(values = c("Hogg"=colors_sites[4],
+  scale_color_manual(values = c("High Salinity Site"=colors_sites[4],
                                 "Young"=colors_sites[3]),
                      name="Site") +
   ylim(-6, 5) + theme(legend.position="top",text = element_text(size = 18)) 
