@@ -14,12 +14,96 @@ library(hms)
 library(zoo)
 library(here)
 
-# NOTE: HOGG removed row 22-08-2022 13:00:04	22	8	2022	13:00:04	369
 # Load function to calculate potential radiation
-p <- sapply(list.files(pattern="potential_rad_generalized.R", path=here("code/Functions"), full.names=TRUE), source)
+p <- sapply(list.files(pattern="potential_rad_generalized.R", path="/Users/sara/Code/Biomet.net/R/data_visualization/", full.names=TRUE), source)
+
+# Load function to load data from the database
+p <- sapply(list.files(pattern="read_database_generalized.R", path="/Users/sara/Code/Biomet.net/R/database_functions/", full.names=TRUE), source)
+
+# Hogg site
+db_path <- '/Users/sara/Library/CloudStorage/OneDrive-UBC/UBC/Database'
+data.Hogg <- read_data_generalized(db_path,c(2021:2022),"HOGG","Clean/ThirdStage",
+                                   c("NEE","NEE_PI_F_MDS","FCH4","FCH4_PI_F_MDS","FCH4_PI_F_RF","H","H_PI_F_MDS","LE","LE_PI_F_MDS",
+                                     "GPP_F_PI_DT","GPP_F_PI_NT","Reco_F_PI_DT","Reco_F_PI_NT","G_1","NETRAD_1_1_1","P_1_1_1","PA_1_1_1",
+                                     "RH_1_1_1","SW_IN_1_1_1","TA_1_1_1","TS_1","TS_2","TS_3","TS_4","USTAR","VPD_1_1_1","WD_1_1_1","WS_1_1_1"),"clean_tv",0)
+
+data.Hogg$datetime <- as.POSIXct(data.Hogg$datetime,"%Y-%m-%d %H:%M:%OS",tz = 'UTC')
+data.Hogg$DOY <- yday(data.Hogg$datetime)
+data.Hogg$pot_rad <- potential_rad_generalized(-90,-100.201894,50.361781,data.Hogg$datetime,data.Hogg$DOY)
+
+# add WTD
+file <- 'Hogg_WTD_20220709.csv'
+#file <- 'Hogg_WTD.csv'
+data.Hogg.WTD <- read.csv(here("data",file), header = T)
+vars.Hogg.WTD <- colnames(data.Hogg.WTD)
+data.Hogg.WTD$time <- strptime(data.Hogg.WTD$Time, "%H:%M:%S",tz="UTC")
+data.Hogg.WTD$datetime <- make_datetime(data.Hogg.WTD$Year, data.Hogg.WTD$Month, data.Hogg.WTD$Day, hour(data.Hogg.WTD$time), minute(data.Hogg.WTD$time))
+#data.Hogg.WTD$datetime <- round_date(as.POSIXct(data.Hogg.WTD$DateTime,"%d-%m-%Y %H:%M:%OS",tz = 'UTC'),"hour")
+
+data.Hogg <- data.Hogg %>% 
+  left_join(data.Hogg.WTD,by = 'datetime')
+
+# Add water quality data
+file <- 'Hogg_WQ_2021_2022.csv'
+data.Hogg.WQ_all <- read.csv(here("data",file), header = T)
+vars.Hogg.WQ_all <- colnames(data.Hogg.WQ_all)
+data.Hogg.WQ_all$datetime <- as.POSIXct(data.Hogg.WQ_all$Date, tz = "UTC")
+data.Hogg.WQ <- data.Hogg.WQ_all[, c(seq(5,15),length(vars.Hogg.WQ_all)+1)] # select only variables of interest
+colnames(data.Hogg.WQ) <- c("pH","Specific_cond","DOC","TDN","NO3_NO2_N","NH4_N","DRP","TDP","TP","ABS_280nm","SO4","datetime")
+
+data.Hogg <- data.Hogg %>% 
+  left_join(data.Hogg.WQ,by = 'datetime')
+
+# Create new data frame and rename columns for interpolated variables
+colnames(data.Hogg.WQ) <- c("pH_interp","Specific_cond_interp","DOC_interp","TDN_interp","NO3_NO2_N_interp","NH4_N_interp","DRP_interp","TDP_interp","TP_interp","ABS_280nm_interp","SO4_interp","datetime")
+data.Hogg <- data.Hogg %>% 
+  left_join(data.Hogg.WQ,by = 'datetime')
+
+# Linearly interpolate between hourly WTD measurements
+# Loop over each year
+data.Hogg$year <- year(data.Hogg$datetime)
+yrs <- unique(data.Hogg$year)
+yrs <- yrs[which(!is.na(unique(data.Hogg$year)))]
+
+for (i in 1:(length(yrs)-1)) { #n-1 years since the last timestep is the first day of the following year
+  NonNAindex <- which(!is.na(data.Hogg$WTD) & data.Hogg$year == yrs[i])
+  firstNonNA <- min(NonNAindex)
+  lastNonNA <- max(NonNAindex)
+  
+  data.Hogg$WTD[firstNonNA:lastNonNA] <- na.approx(data.Hogg$WTD[firstNonNA:lastNonNA])
+}
+
+# Linearly interpolate between WQ measurements
+for (i in 1:(length(yrs)-1)) {
+  
+  # First SO4 
+  NonNAindex <- which(!is.na(data.Hogg$SO4) & data.Hogg$year == yrs[i])
+  firstNonNA <- min(NonNAindex)
+  lastNonNA <- max(NonNAindex)
+  
+  data.Hogg$SO4_interp[firstNonNA:lastNonNA] <- na.approx(data.Hogg$SO4_interp[firstNonNA:lastNonNA])
+  
+  # Next all other variables - update once we have the latest WQ data
+  NonNAindex <- which(!is.na(data.Hogg$Specific_cond) & data.Hogg$year == yrs[i])
+  
+  if (length(NonNAindex) >0) {
+    firstNonNA <- min(NonNAindex)
+    lastNonNA <- max(NonNAindex)
+    
+    data.Hogg$pH_interp[firstNonNA:lastNonNA] <- na.approx(data.Hogg$pH_interp[firstNonNA:lastNonNA])
+    data.Hogg$Specific_cond_interp[firstNonNA:lastNonNA] <- na.approx(data.Hogg$Specific_cond_interp[firstNonNA:lastNonNA])
+    data.Hogg$DOC_interp[firstNonNA:lastNonNA] <- na.approx(data.Hogg$DOC_interp[firstNonNA:lastNonNA])
+    data.Hogg$TDN_interp[firstNonNA:lastNonNA] <- na.approx(data.Hogg$TDN_interp[firstNonNA:lastNonNA])
+    data.Hogg$NO3_NO2_N_interp[firstNonNA:lastNonNA] <- na.approx(data.Hogg$NO3_NO2_N_interp[firstNonNA:lastNonNA])
+    data.Hogg$NH4_N_interp[firstNonNA:lastNonNA] <- na.approx(data.Hogg$NH4_N_interp[firstNonNA:lastNonNA])
+    data.Hogg$DRP_interp[firstNonNA:lastNonNA] <- na.approx(data.Hogg$DRP_interp[firstNonNA:lastNonNA])
+    data.Hogg$TDP_interp[firstNonNA:lastNonNA] <- na.approx(data.Hogg$TDP_interp[firstNonNA:lastNonNA])
+    data.Hogg$TP_interp[firstNonNA:lastNonNA] <- na.approx(data.Hogg$TP_interp[firstNonNA:lastNonNA])
+    data.Hogg$ABS_280nm_interp[firstNonNA:lastNonNA] <- na.approx(data.Hogg$ABS_280nm_interp[firstNonNA:lastNonNA])
+  }
+}
 
 # Young site
-file <- 'Young_L3.csv'
 data.Young <- read.csv(here("data",file), header = T)
 data.Young$site <- 'Young'
 vars.Young <- colnames(data.Young)
@@ -103,94 +187,6 @@ for (i in 1:length(yrs)) {
     data.Young$TDP_interp[firstNonNA:lastNonNA] <- na.approx(data.Young$TDP_interp[firstNonNA:lastNonNA])
     data.Young$TP_interp[firstNonNA:lastNonNA] <- na.approx(data.Young$TP_interp[firstNonNA:lastNonNA])
     data.Young$ABS_280nm_interp[firstNonNA:lastNonNA] <- na.approx(data.Young$ABS_280nm_interp[firstNonNA:lastNonNA])
-  }
-}
-
-# Hogg site
-file <- 'Hogg_L3.csv'
-data.Hogg <- read.csv(here("data",file), header = T)
-data.Hogg$site <- 'Hogg'
-vars.Hogg <- colnames(data.Hogg)
-
-file <- 'Hogg_L2.csv'
-data.Hogg.L2 <- read.csv(here("data",file), header = T)
-vars.Hogg.L2 <- colnames(data.Hogg.L2)
-
-ind <- which(data.Hogg.L2$DATE == data.Hogg$DATE)
-
-data.Hogg$FCH4 <- data.Hogg.L2$ch4_flux[ind]
-data.Hogg$datetime <- as.POSIXct(data.Hogg$DATE,"%Y-%m-%d %H:%M:%OS",tz = 'UTC')
-data.Hogg$DOY <- yday(data.Hogg$datetime)
-data.Hogg$pot_rad <- potential_rad(-90,-100.201894,50.361781,data.Hogg$datetime,data.Hogg$DOY)
-
-# add WTD
-file <- 'Hogg_WTD_20220709.csv'
-#file <- 'Hogg_WTD.csv'
-data.Hogg.WTD <- read.csv(here("data",file), header = T)
-vars.Hogg.WTD <- colnames(data.Hogg.WTD)
-data.Hogg.WTD$time <- strptime(data.Hogg.WTD$Time, "%H:%M:%S",tz="UTC")
-data.Hogg.WTD$datetime <- make_datetime(data.Hogg.WTD$Year, data.Hogg.WTD$Month, data.Hogg.WTD$Day, hour(data.Hogg.WTD$time), minute(data.Hogg.WTD$time))
-#data.Hogg.WTD$datetime <- round_date(as.POSIXct(data.Hogg.WTD$DateTime,"%d-%m-%Y %H:%M:%OS",tz = 'UTC'),"hour")
-
-data.Hogg <- data.Hogg %>% 
-  left_join(data.Hogg.WTD,by = 'datetime')
-
-# Add water quality data
-file <- 'Hogg_WQ_2021_2022.csv'
-data.Hogg.WQ_all <- read.csv(here("data",file), header = T)
-vars.Hogg.WQ_all <- colnames(data.Hogg.WQ_all)
-data.Hogg.WQ_all$datetime <- as.POSIXct(data.Hogg.WQ_all$Date, tz = "UTC")
-data.Hogg.WQ <- data.Hogg.WQ_all[, c(seq(5,15),length(vars.Hogg.WQ_all)+1)] # select only variables of interest
-colnames(data.Hogg.WQ) <- c("pH","Specific_cond","DOC","TDN","NO3_NO2_N","NH4_N","DRP","TDP","TP","ABS_280nm","SO4","datetime")
-
-data.Hogg <- data.Hogg %>% 
-  left_join(data.Hogg.WQ,by = 'datetime')
-
-# Create new data frame and rename columns for interpolated variables
-colnames(data.Hogg.WQ) <- c("pH_interp","Specific_cond_interp","DOC_interp","TDN_interp","NO3_NO2_N_interp","NH4_N_interp","DRP_interp","TDP_interp","TP_interp","ABS_280nm_interp","SO4_interp","datetime")
-data.Hogg <- data.Hogg %>% 
-  left_join(data.Hogg.WQ,by = 'datetime')
-
-# Linearly interpolate between hourly WTD measurements
-# Loop over each year
-yrs <- unique(data.Hogg$Year)
-yrs <- yrs[which(!is.na(unique(data.Hogg$Year)))]
-
-for (i in 1:length(yrs)) {
-  NonNAindex <- which(!is.na(data.Hogg$WTD) & data.Hogg$year == yrs[i])
-  firstNonNA <- min(NonNAindex)
-  lastNonNA <- max(NonNAindex)
-  
-  data.Hogg$WTD[firstNonNA:lastNonNA] <- na.approx(data.Hogg$WTD[firstNonNA:lastNonNA])
-}
-
-# Linearly interpolate between WQ measurements
-for (i in 1:length(yrs)) {
-  
-  # First SO4 
-  NonNAindex <- which(!is.na(data.Hogg$SO4) & data.Hogg$year == yrs[i])
-  firstNonNA <- min(NonNAindex)
-  lastNonNA <- max(NonNAindex)
-  
-  data.Hogg$SO4_interp[firstNonNA:lastNonNA] <- na.approx(data.Hogg$SO4_interp[firstNonNA:lastNonNA])
-  
-  # Next all other variables - update once we have the latest WQ data
-  NonNAindex <- which(!is.na(data.Hogg$Specific_cond) & data.Hogg$year == yrs[i])
-  
-  if (length(NonNAindex) >0) {
-    firstNonNA <- min(NonNAindex)
-    lastNonNA <- max(NonNAindex)
-    
-    data.Hogg$pH_interp[firstNonNA:lastNonNA] <- na.approx(data.Hogg$pH_interp[firstNonNA:lastNonNA])
-    data.Hogg$Specific_cond_interp[firstNonNA:lastNonNA] <- na.approx(data.Hogg$Specific_cond_interp[firstNonNA:lastNonNA])
-    data.Hogg$DOC_interp[firstNonNA:lastNonNA] <- na.approx(data.Hogg$DOC_interp[firstNonNA:lastNonNA])
-    data.Hogg$TDN_interp[firstNonNA:lastNonNA] <- na.approx(data.Hogg$TDN_interp[firstNonNA:lastNonNA])
-    data.Hogg$NO3_NO2_N_interp[firstNonNA:lastNonNA] <- na.approx(data.Hogg$NO3_NO2_N_interp[firstNonNA:lastNonNA])
-    data.Hogg$NH4_N_interp[firstNonNA:lastNonNA] <- na.approx(data.Hogg$NH4_N_interp[firstNonNA:lastNonNA])
-    data.Hogg$DRP_interp[firstNonNA:lastNonNA] <- na.approx(data.Hogg$DRP_interp[firstNonNA:lastNonNA])
-    data.Hogg$TDP_interp[firstNonNA:lastNonNA] <- na.approx(data.Hogg$TDP_interp[firstNonNA:lastNonNA])
-    data.Hogg$TP_interp[firstNonNA:lastNonNA] <- na.approx(data.Hogg$TP_interp[firstNonNA:lastNonNA])
-    data.Hogg$ABS_280nm_interp[firstNonNA:lastNonNA] <- na.approx(data.Hogg$ABS_280nm_interp[firstNonNA:lastNonNA])
   }
 }
 
