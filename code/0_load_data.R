@@ -24,8 +24,8 @@ p <- sapply(list.files(pattern="read_database_generalized.R", path="/Users/sara/
 db_path <- '/Users/sara/Library/CloudStorage/OneDrive-UBC/UBC/Database'
 data.Hogg <- read_data_generalized(db_path,c(2021:2022),"HOGG","Clean/ThirdStage",
                                    c("NEE","NEE_PI_F_MDS","FCH4","FCH4_PI_F_MDS","FCH4_PI_F_RF","H","H_PI_F_MDS","LE","LE_PI_F_MDS",
-                                     "GPP_F_PI_DT","GPP_F_PI_NT","Reco_F_PI_DT","Reco_F_PI_NT","G_1","NETRAD_1_1_1","P_1_1_1","PA_1_1_1",
-                                     "RH_1_1_1","SW_IN_1_1_1","TA_1_1_1","TS_1","TS_2","TS_3","TS_4","USTAR","VPD_1_1_1","WD_1_1_1","WS_1_1_1"),"clean_tv",0)
+                                     "GPP_PI_F_DT","GPP_PI_F_NT","Reco_PI_F_DT","Reco_PI_F_NT","NETRAD_1_1_1","P_1_1_1","PA_1_1_1",
+                                     "RH_1_1_1","SW_IN_1_1_1","TA_1_1_1","TS_1","TS_2","TS_3","USTAR","VPD_1_1_1","WD_1_1_1","WS_1_1_1"),"clean_tv",0)
 
 data.Hogg$datetime <- as.POSIXct(data.Hogg$datetime,"%Y-%m-%d %H:%M:%OS",tz = 'UTC')
 data.Hogg$DOY <- yday(data.Hogg$datetime)
@@ -104,20 +104,15 @@ for (i in 1:(length(yrs)-1)) {
 }
 
 # Young site
-data.Young <- read.csv(here("data",file), header = T)
-data.Young$site <- 'Young'
-vars.Young <- colnames(data.Young)
+db_path <- '/Users/sara/Library/CloudStorage/OneDrive-UBC/UBC/Database'
+data.Young <- read_data_generalized(db_path,c(2021:2022),"YOUNG","Clean/ThirdStage",
+                                    c("NEE","NEE_PI_F_MDS","FCH4","FCH4_PI_F_MDS","FCH4_PI_F_RF","H","H_PI_F_MDS","LE","LE_PI_F_MDS",
+                                      "GPP_PI_F_DT","GPP_PI_F_NT","Reco_PI_F_DT","Reco_PI_F_NT","NETRAD_1_1_1","P_1_1_1","PA_1_1_1",
+                                      "RH_1_1_1","SW_IN_1_1_1","TA_1_1_1","TS_1","TS_2","TS_3","USTAR","VPD_1_1_1","WD_1_1_1","WS_1_1_1"),"clean_tv",0)
 
-file <- 'Young_L2.csv'
-data.Young.L2 <- read.csv(here("data",file), header = T)
-vars.Young.L2 <- colnames(data.Young.L2)
-
-ind <- which(data.Young.L2$DATE == data.Young$DATE)
-
-data.Young$FCH4 <- data.Young.L2$ch4_flux[ind]
-data.Young$datetime <- as.POSIXct(data.Young$DATE,"%Y-%m-%d %H:%M:%OS",tz = 'UTC')
+data.Young$datetime <- as.POSIXct(data.Young$datetime,"%Y-%m-%d %H:%M:%OS",tz = 'UTC')
 data.Young$DOY <- yday(data.Young$datetime)
-data.Young$pot_rad <- potential_rad(-90,-100.534947,50.370433,data.Young$datetime,data.Young$DOY)
+data.Young$pot_rad <- potential_rad_generalized(-90,-100.534947,50.370433,data.Young$datetime,data.Young$DOY)
 
 # add WTD
 file <- 'Young_WTD_20220709.csv'
