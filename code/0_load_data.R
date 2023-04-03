@@ -3,13 +3,8 @@
 # load packages
 library(lubridate) # work with dates
 library(dplyr)     # data manipulation (filter, summarize, mutate)
-library(ggplot2)   # graphics
-library(gridExtra) # tile several plots next to each other
-library(plotly)   # Allows you to zoom in on plots
 library(openair) #For plotting wind and pollution roses (to explore the relationship between fluxes and wind direction)
-library(wesanderson)
 library(ggsignif)
-library(ggpubr)
 library(hms)
 library(zoo)
 library(here)
@@ -25,7 +20,7 @@ db_path <- '/Users/sara/Library/CloudStorage/OneDrive-UBC/UBC/Database'
 data.Hogg <- read_data_generalized(db_path,c(2021:2022),"HOGG","Clean/ThirdStage",
                                    c("NEE","NEE_PI_F_MDS","FCH4","FCH4_PI_F_MDS","FCH4_PI_F_RF","H","H_PI_F_MDS","LE","LE_PI_F_MDS",
                                      "GPP_PI_F_DT","GPP_PI_F_NT","Reco_PI_F_DT","Reco_PI_F_NT","NETRAD_1_1_1","P_1_1_1","PA_1_1_1",
-                                     "RH_1_1_1","SW_IN_1_1_1","TA_1_1_1","TS_1","TS_2","TS_3","USTAR","VPD_1_1_1","WD_1_1_1","WS_1_1_1"),"clean_tv",0)
+                                     "RH_1_1_1","SW_IN_1_1_1","PPFD_IN_1_1_1","TA_1_1_1","TS_1","TS_2","TS_3","USTAR","VPD_1_1_1","WD_1_1_1","WS_1_1_1"),"clean_tv",0)
 
 data.Hogg$datetime <- as.POSIXct(data.Hogg$datetime,"%Y-%m-%d %H:%M:%OS",tz = 'UTC')
 data.Hogg$DOY <- yday(data.Hogg$datetime)
@@ -108,7 +103,7 @@ db_path <- '/Users/sara/Library/CloudStorage/OneDrive-UBC/UBC/Database'
 data.Young <- read_data_generalized(db_path,c(2021:2022),"YOUNG","Clean/ThirdStage",
                                     c("NEE","NEE_PI_F_MDS","FCH4","FCH4_PI_F_MDS","FCH4_PI_F_RF","H","H_PI_F_MDS","LE","LE_PI_F_MDS",
                                       "GPP_PI_F_DT","GPP_PI_F_NT","Reco_PI_F_DT","Reco_PI_F_NT","NETRAD_1_1_1","P_1_1_1","PA_1_1_1",
-                                      "RH_1_1_1","SW_IN_1_1_1","TA_1_1_1","TS_1","TS_2","TS_3","USTAR","VPD_1_1_1","WD_1_1_1","WS_1_1_1"),"clean_tv",0)
+                                      "RH_1_1_1","SW_IN_1_1_1","PPFD_IN_1_1_1","TA_1_1_1","TS_1","TS_2","TS_3","USTAR","VPD_1_1_1","WD_1_1_1","WS_1_1_1"),"clean_tv",0)
 
 data.Young$datetime <- as.POSIXct(data.Young$datetime,"%Y-%m-%d %H:%M:%OS",tz = 'UTC')
 data.Young$DOY <- yday(data.Young$datetime)
@@ -144,10 +139,11 @@ data.Young <- data.Young %>%
 
 # Linearly interpolate between hourly WTD measurements
 # Loop over each year
-yrs <- unique(data.Young$Year)
-yrs <- yrs[which(!is.na(unique(data.Young$Year)))]
+data.Young$year <- year(data.Young$datetime)
+yrs <- unique(data.Young$year)
+yrs <- yrs[which(!is.na(unique(data.Young$year)))]
 
-for (i in 1:length(yrs)) {
+for (i in 1:(length(yrs)-1)) {
   NonNAindex <- which(!is.na(data.Young$WTD) & data.Young$year == yrs[i])
   firstNonNA <- min(NonNAindex)
   lastNonNA <- max(NonNAindex)
@@ -156,7 +152,7 @@ for (i in 1:length(yrs)) {
 }
 
 # Linearly interpolate between WQ measurements
-for (i in 1:length(yrs)) {
+for (i in 1:(length(yrs)-1)) {
   
   # First SO4 
   NonNAindex <- which(!is.na(data.Young$SO4) & data.Young$year == yrs[i])
@@ -185,135 +181,29 @@ for (i in 1:length(yrs)) {
   }
 }
 
+# Add site variable
+data.Hogg$site <- "Hogg"
+data.Young$site <- "Young"
+
 # Export subset of data for Matt F. - NOTE THAT WTD/WQ IS MISSING IN THE WINTER - FIGURE OUT THE BEST WAY TO HANDLE THAT. Should we consider just an average annual value for WQ parameters
 # NOTE- SEND WITH CORRECTED RADIATION DATA ONCE DARIAN FIXES IT & update FCH4 data
-df.Hogg <- data.Hogg[,c('site','DATE','GPP_f', 'Reco','pot_rad','SWIN_1_1_1','VPD.x','air_p_mean','P_RAIN_1_1_1','TA_1_1_1','TS_1_1_1','TS_2_1_1','TS_3_1_1','WTD','LE_f','NEE_uStar_f','FCH4_f','FCH4',"pH_interp","Specific_cond_interp","DOC_interp","TDN_interp","NO3_NO2_N_interp","NH4_N_interp","DRP_interp","TDP_interp","TP_interp","ABS_280nm_interp","SO4_interp")]
+#df.Hogg <- data.Hogg[,c('site','DATE','GPP_f', 'Reco','pot_rad','SWIN_1_1_1','VPD.x','air_p_mean','P_RAIN_1_1_1','TA_1_1_1','TS_1_1_1','TS_2_1_1','TS_3_1_1','WTD','LE_f','NEE_uStar_f','FCH4_f','FCH4',"pH_interp","Specific_cond_interp","DOC_interp","TDN_interp","NO3_NO2_N_interp","NH4_N_interp","DRP_interp","TDP_interp","TP_interp","ABS_280nm_interp","SO4_interp")]
 # Replace FCH4_f with FCH4_gf_RF
-df.Young <- data.Young[,c('site','DATE','GPP_f', 'Reco','pot_rad','SWIN_1_1_1','VPD.x','air_p_mean','P_RAIN_1_1_1','TA_1_1_1','TS_1_1_1','TS_2_1_1','TS_3_1_1','WTD','LE_f','NEE_uStar_f','FCH4_f','FCH4',"pH_interp","Specific_cond_interp","DOC_interp","TDN_interp","NO3_NO2_N_interp","NH4_N_interp","DRP_interp","TDP_interp","TP_interp","ABS_280nm_interp","SO4_interp")]
+#df.Young <- data.Young[,c('site','DATE','GPP_f', 'Reco','pot_rad','SWIN_1_1_1','VPD.x','air_p_mean','P_RAIN_1_1_1','TA_1_1_1','TS_1_1_1','TS_2_1_1','TS_3_1_1','WTD','LE_f','NEE_uStar_f','FCH4_f','FCH4',"pH_interp","Specific_cond_interp","DOC_interp","TDN_interp","NO3_NO2_N_interp","NH4_N_interp","DRP_interp","TDP_interp","TP_interp","ABS_280nm_interp","SO4_interp")]
 
 #Saving the data tp csv (for Matt)
-write.table(df.Hogg, file = here("output",'Hogg.csv'),row.names=FALSE,sep='\t') 
-write.table(df.Young, file = here("output",'Young.csv'),row.names=FALSE,sep='\t') 
+#write.table(df.Hogg, file = here("output",'Hogg.csv'),row.names=FALSE,sep='\t') 
+#write.table(df.Young, file = here("output",'Young.csv'),row.names=FALSE,sep='\t') 
 
 # Merge data frames
-data <- dplyr::bind_rows(df.Hogg,df.Young)
+# First make sure column names are the same
+setdiff(colnames(data.Hogg),colnames(data.Young))
+setdiff(colnames(data.Young),colnames(data.Hogg))
+
+data <- dplyr::bind_rows(data.Hogg,data.Young)
 
 # Convert DATE from character to date
-data$DATE <- as.POSIXct(data$DATE, format =  "%Y-%m-%d %H:%M:%OS", tz ='UTC')
+data$datetime <- as.POSIXct(data$datetime, format =  "%Y-%m-%d %H:%M:%OS", tz ='UTC')
 
 # save 30 min data
 save(data,file="output/30min_data.Rda")
-
-# Group by site
-data.site <- data %>%
-  group_by(site)
-
-# Plot met by site
-p <- ggplot() +
-  geom_point(data = data.site, aes(x = DATE, y = pot_rad, color = as.factor(site)), size = 1)
-toWebGL(ggplotly(p))
-
-p <- ggplot() +
-  geom_point(data = data.site, aes(x = DATE, y = WTD, color = as.factor(site)), size = 1)
-toWebGL(ggplotly(p))
-
-# Look at radiation data in more depth - use composite plots as in Ameriflux
-p <- ggplot() +
-  geom_line(data = data.site, aes(x = DATE, y = PPFD_1_1_1, color = as.factor(site)), size = 1) +
-  geom_line(data = data.site, aes(x = DATE, y = SWIN_1_1_1, color = as.factor(site)), size = 1)
-toWebGL(ggplotly(p))
-
-p <- ggplot() +
-  geom_line(data = data.site, aes(x = DATE, y = SWIN_1_1_1, color = as.factor(site)), size = 1)
-toWebGL(ggplotly(p))
-
-p <- ggplot() +
-  geom_line(data = data.site, aes(x = DATE, y = SWIN_1_1_1, color = as.factor(site)), size = 1) +
-  geom_line(data = data.site, aes(x = DATE, y = pot_rad, color = as.factor(site)), size = 1)
-toWebGL(ggplotly(p))
-
-p <- ggplot() +
-  geom_line(data = data.site, aes(x = DATE, y = PPFD_1_1_1/1.6, color = as.factor(site)), size = 1) +
-  geom_line(data = data.site, aes(x = DATE, y = pot_rad, color = as.factor(site)), size = 1)
-toWebGL(ggplotly(p))
-
-p <- ggplot() +
-  geom_point(data = data.site, aes(x = DATE, y = P_RAIN_1_1_1, color = as.factor(site)), size = 1)
-toWebGL(ggplotly(p))
-
-p <- ggplot() +
-  geom_point(data = data.site, aes(x = DATE, y = TA_1_1_1, color = as.factor(site)), size = 1)
-toWebGL(ggplotly(p))
-
-# Check soil temperature in more detail....
-p <- ggplot() +
-  geom_point(data = data.site, aes(x = DATE, y = TS_1_1_1, color = as.factor(site)), size = 1)
-toWebGL(ggplotly(p))
-
-p <- ggplot() +
-  geom_point(data = data.site, aes(x = DATE, y = TS_2_1_1, color = as.factor(site)), size = 1)
-toWebGL(ggplotly(p))
-
-p <- ggplot() +
-  geom_point(data = data.site, aes(x = DATE, y = TS_3_1_1, color = as.factor(site)), size = 1)
-toWebGL(ggplotly(p))
-
-p <- ggplot() +
-  geom_point(data = data.site, aes(x = DATE, y = VPD.x, color = as.factor(site)), size = 1)
-toWebGL(ggplotly(p))
-
-p <- ggplot() +
-  geom_point(data = data.site, aes(x = DATE, y = air_p_mean, color = as.factor(site)), size = 1)
-toWebGL(ggplotly(p))
-
-# Plot CO2 fluxes by site
-p <- ggplot() +
-  geom_point(data = data.site, aes(x = DATE, y = NEE_uStar_f, color = as.factor(site)), size = 1)
-toWebGL(ggplotly(p))
-
-# Plot FCH4 fluxes by site
-p <- ggplot() +
-  geom_point(data = data.site, aes(x = DATE, y = FCH4, color = as.factor(site)), size = 1)
-toWebGL(ggplotly(p))
-
-p <- ggplot() +
-  geom_point(data = data.site, aes(x = DATE, y = FCH4_gf_RF, color = as.factor(site)), size = 1)
-toWebGL(ggplotly(p))
-
-# USE ONLY _gf_RF once available
-p <- ggplot() +
-  geom_point(data = data.site, aes(x = DATE, y = FCH4_f, color = as.factor(site)), size = 1)
-toWebGL(ggplotly(p))
-
-# Plot water quality variables
-p <- ggplot() +
-  geom_point(data = data.site, aes(x = DATE, y = SO4_interp, color = as.factor(site)), size = 1)
-toWebGL(ggplotly(p))
-
-p <- ggplot() +
-  geom_point(data = data.site, aes(x = DATE, y = ABS_280nm_interp, color = as.factor(site)), size = 1)
-toWebGL(ggplotly(p))
-
-# compute daily mean fluxes (using filled data for now)
-conv_co2 <- 12.01*(60*60*24)/(10^6)
-conv_ch4 <- 12.01*(60*60*24)/(10^6)
-data.daily <- data %>%
-  mutate(year = year(DATE),
-         jday = yday(DATE)) %>%
-  group_by(site,year,jday) %>%
-  dplyr::summarize(FC_gC = mean(NEE_uStar_f, na.rm = TRUE)*conv_co2,
-                   GPP_f_gC = mean(GPP_f, na.rm = TRUE)*conv_co2,
-                   Reco_gC = mean(Reco, na.rm = TRUE)*conv_co2,
-                   FCH4_gC = mean(FCH4_gf_RF, na.rm = TRUE)*conv_ch4,
-                   WTH = mean(WTH, na.rm = TRUE),
-                   TS = mean(TS_2_1_1, na.rm = TRUE),
-                   SW_IN = mean(SWIN_1_1_1, na.rm = TRUE),
-                   VPD = mean(VPD.x, na.rm = TRUE),
-                   LE_f = mean(LE_f, na.rm = TRUE),
-                   date = first(DATE))
-
-# save daily data
-save(data.daily,file="output/daily_data.Rda")
-
-# Look at monthly data!
-# 
