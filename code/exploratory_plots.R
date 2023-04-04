@@ -97,28 +97,19 @@ p <- ggplot() +
   geom_point(data = data.site, aes(x = datetime, y = ABS_280nm_interp, color = as.factor(site)), size = 1)
 toWebGL(ggplotly(p))
 
-# compute daily mean fluxes (using filled data for now)
-conv_co2 <- 12.01*(60*60*24)/(10^6)
-conv_ch4 <- 12.01*(60*60*24)/(10^9)
-conv_energy <- (60*60*24)/(10^6)
-data.daily <- data %>%
-  mutate(year = year(datetime),
-         jday = yday(datetime)) %>%
-  group_by(site,year,jday) %>%
-  dplyr::summarize(FC_gC = mean(NEE_PI_F_MDS, na.rm = TRUE)*conv_co2,
-                   GPP_PI_F_NT_gC = mean(GPP_PI_F_NT, na.rm = TRUE)*conv_co2,
-                   GPP_PI_F_DT_gC = mean(GPP_PI_F_DT, na.rm = TRUE)*conv_co2,
-                   Reco_PI_F_NT_gC = mean(Reco_PI_F_NT, na.rm = TRUE)*conv_co2,
-                   Reco_PI_F_DT_gC = mean(Reco_PI_F_DT, na.rm = TRUE)*conv_co2,
-                   FCH4_gC = mean(FCH4_PI_F_RF, na.rm = TRUE)*conv_ch4,
-                   WTD = mean(WTD, na.rm = TRUE),
-                   TS = mean(TS_2, na.rm = TRUE),
-                   SW_IN = mean(SW_IN_1_1_1, na.rm = TRUE)*conv_energy,
-                   PPFD_IN = mean(PPFD_IN_1_1_1, na.rm = TRUE),
-                   LE = mean(LE_PI_F_MDS, na.rm = TRUE)*conv_energy,
-                   H = mean(LE_PI_F_MDS, na.rm = TRUE)*conv_energy,
-                   datetime = first(datetime),
-                   site = first(site))
+# Load data
+load("output/daily_data.Rda")
+
+# Plot daily CO2 fluxes by site
+colors_sites <- c(wes_palette("FantasticFox1"),wes_palette("Zissou1"))
+p <- ggplot() +
+  geom_point(data = data.daily, aes(x = jday, y = FC_gC, color = factor(site), shape = factor(year)), size = 0.6)
+toWebGL(ggplotly(p))
+
+# Plot daily FCH4 fluxes by site
+p <- ggplot() +
+  geom_point(data = data.daily, aes(x = jday, y = FCH4_gC*1000, color = factor(site), shape = factor(year)), size = 0.6)
+toWebGL(ggplotly(p))
 
 p <- ggplot() +
   geom_line(data = data.daily, aes(x = datetime, y = FC_gC, color = as.factor(site)))
@@ -136,5 +127,23 @@ p <- ggplot() +
   geom_line(data = data.daily, aes(x = datetime, y = LE, color = as.factor(site)))
 toWebGL(ggplotly(p))
 
-# save daily data
-save(data.daily,file="output/daily_data.Rda")
+# Create box plots of daily NEE and FCH4 and look at differences between sites
+p_FC <- ggplot(data.daily, aes(x=site, y=FC_gC)) + 
+  geom_boxplot() + xlab('') + ylab(expression(NEE~(g~C~m^-2~d^-1))) +
+  geom_signif(comparisons = list(c("Hogg", "Young")), 
+              map_signif_level=TRUE, tip_length = 0) + theme(text = element_text(size = 18))
+p_FC
+
+t.test(FC_gC ~ site, data.daily)
+
+p_FCH4 <- ggplot(data.daily, aes(x=site, y=FCH4_gC*1000)) + 
+  geom_boxplot() + xlab('') + ylab(expression(FCH4~(mg~C~m^-2~d^-1))) +
+  geom_signif(comparisons = list(c("Hogg", "Young")), 
+              map_signif_level=TRUE, tip_length = 0) + theme(text = element_text(size = 18))
+p_FCH4
+t.test(FCH4_gC*1000 ~ site, data.daily)
+
+p <- ggarrange(p_FC, p_FCH4, ncol = 2, labels = c("A", "B"))
+p
+
+ggsave("figures/boxplot.pdf", p, height = 5, width = 8, dpi = 320)

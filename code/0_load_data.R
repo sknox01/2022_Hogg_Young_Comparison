@@ -207,3 +207,29 @@ data$datetime <- as.POSIXct(data$datetime, format =  "%Y-%m-%d %H:%M:%OS", tz ='
 
 # save 30 min data
 save(data,file="output/30min_data.Rda")
+
+# compute daily fluxes
+conv_co2 <- 12.01*(60*60*24)/(10^6)
+conv_ch4 <- 12.01*(60*60*24)/(10^9)
+conv_energy <- (60*60*24)/(10^6)
+data.daily <- data %>%
+  mutate(year = year(datetime),
+         jday = yday(datetime)) %>%
+  group_by(site,year,jday) %>%
+  dplyr::summarize(FC_gC = mean(NEE_PI_F_MDS, na.rm = TRUE)*conv_co2,
+                   GPP_PI_F_NT_gC = mean(GPP_PI_F_NT, na.rm = TRUE)*conv_co2,
+                   GPP_PI_F_DT_gC = mean(GPP_PI_F_DT, na.rm = TRUE)*conv_co2,
+                   Reco_PI_F_NT_gC = mean(Reco_PI_F_NT, na.rm = TRUE)*conv_co2,
+                   Reco_PI_F_DT_gC = mean(Reco_PI_F_DT, na.rm = TRUE)*conv_co2,
+                   FCH4_gC = mean(FCH4_PI_F_RF, na.rm = TRUE)*conv_ch4,
+                   WTD = mean(WTD, na.rm = TRUE),
+                   TS = mean(TS_2, na.rm = TRUE),
+                   SW_IN = mean(SW_IN_1_1_1, na.rm = TRUE)*conv_energy,
+                   PPFD_IN = mean(PPFD_IN_1_1_1, na.rm = TRUE),
+                   LE = mean(LE_PI_F_MDS, na.rm = TRUE)*conv_energy,
+                   H = mean(LE_PI_F_MDS, na.rm = TRUE)*conv_energy,
+                   datetime = first(datetime),
+                   site = first(site))
+
+# save daily data
+save(data.daily,file="output/daily_data.Rda")
