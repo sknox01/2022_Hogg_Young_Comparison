@@ -147,3 +147,16 @@ p <- ggarrange(p_FC, p_FCH4, ncol = 2, labels = c("A", "B"))
 p
 
 ggsave("figures/boxplot.pdf", p, height = 5, width = 8, dpi = 320)
+
+# water quality data
+var <- 'pH'
+p <- ggplot() +
+  geom_point(data = data.daily, aes(x = datetime, y = evaluate(var), color = factor(site)), size = 1)
+toWebGL(ggplotly(p))
+
+p_FCH4 <- ggplot(data.daily, aes(x=site, y=FCH4_gC*1000)) + 
+  geom_boxplot() + xlab('') + ylab(expression(FCH4~(mg~C~m^-2~d^-1))) +
+  geom_signif(comparisons = list(c("Hogg", "Young")), 
+              map_signif_level=TRUE, tip_length = 0) + theme(text = element_text(size = 18))
+p_FCH4
+t.test(FCH4_gC*1000 ~ site, data.daily)

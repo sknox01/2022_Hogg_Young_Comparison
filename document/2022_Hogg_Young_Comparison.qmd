@@ -54,7 +54,7 @@ Here we present the first eddy covariance estimates of carbon dioxide ($CO_{2}$)
 
 MBPPW1, located at 50.3623˚N, -100.20242˚W, is an isolated cropland marsh in the PPR of Manitoba, Canada. This wetland site is entirely dominated by emergent vegetation, primarily populated by Schoenoplectus tabernaemontani and Typha spp. The water chemistry in this wetland is characterized by high sulfate concentrations.
 
-MBPPW2, located at 50.3705˚N, -100.5339˚W, is an isolated grassland marsh about 24 km East of MBPPW1. However, this site is much more heterogenous than MBPPW1 and is characterized by a combination of open water and emergent vegetation. Large mats of submersed macrophytes are found near the open water surface during the growing season, and the emergent vegetation is dominated by Typha spp. This site is characterized by lower sulfate concentrations.
+MBPPW2, located at 50.3705˚N, -100.5339˚W, is an isolated grassland marsh about 24 km East of MBPPW1. However, this site is much more heterogeneous than MBPPW1 and is characterized by a combination of open water and emergent vegetation. Large mats of submersed macrophytes are found near the open water surface during the growing season, and the emergent vegetation is dominated by Typha spp. This site is characterized by lower sulfate concentrations.
 
 ## Eddy covariance measurements
 
@@ -65,6 +65,8 @@ MBPPW2, located at 50.3705˚N, -100.5339˚W, is an isolated grassland marsh abou
 # Results
 
 ## Weather and hydrological conditions
+
+
 
 Figure [-@fig-NEE].
 
