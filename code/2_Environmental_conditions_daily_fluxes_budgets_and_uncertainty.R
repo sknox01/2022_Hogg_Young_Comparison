@@ -11,76 +11,119 @@ library(ggpubr)
 library(hms)
 library(zoo)
 library(here)
+library(corrplot)
+library(factoextra)
 
 # Load data
-load("output/daily_data.Rda")
+load(here("output/daily_data.Rda"))
 
 # Trim data frame to start on June 1, 2021 
 ind_s_Young <- which(data.daily$datetime == as.POSIXct("2021-06-01",tz = 'UTC') & data.daily$site == 'Young')
-ind_Young <- which(data.daily$site == 'Young')
+ind_Young <- which(data.daily$site == 'Young' & data.daily$year < 2023)
 ind_Young_last <- ind_Young[length(ind_Young)]
 
 ind_s_Hogg <- which(data.daily$datetime == as.POSIXct("2021-06-01",tz = 'UTC') & data.daily$site == 'Hogg')
-ind_Hogg <- which(data.daily$site == 'Hogg')
+ind_Hogg <- which(data.daily$site == 'Hogg' & data.daily$year < 2023)
 ind_Hogg_last <- ind_Hogg[length(ind_Hogg)]
 
 data.daily <- data.daily[c(ind_s_Hogg:ind_Hogg_last,ind_s_Young:ind_Young_last), ] 
 
-# Plot daily CO2 fluxes by site
-colors_sites <- c("#999999", "#E69F00", "#56B4E9", "#009E73",
-                       "#F0E442", "#0072B2", "#D55E00", "#CC79A7") # Color blind palette from: https://www.datanovia.com/en/blog/ggplot-colors-best-tricks-you-will-love/
+# Figures in body of the manuscript
 
-p <- ggplot() +
-  geom_line(data = data.daily, aes(x = as.Date(datetime), y = FC_gC, color = factor(site)),linewidth=0.3) + scale_x_date(date_labels = "%b %y") +
-  xlab('') + ylab(expression(NEE~(g~C~m^-2~d^-1))) +
-  scale_color_manual(values = c("Hogg"=colors_sites[6],
-                                "Young"=colors_sites[2]),
-                     name="Site") +
-  theme_bw() +
-  ylim(-8, 8) + theme(#legend.position = c(0.1, 0.85),
-                      text = element_text(size = 10),
-                      legend.title = element_text(size=6),
-                      legend.text = element_text(size=6),
-                      legend.key.height=unit(0.5,"line")) 
-p  
+# water quality data
+# Table summary of WQ data
+vars <- c('pH','SO4','Specific_cond','DOC','TDN','NO3_NO2_N','NH4_N','DRP','TDP','TP','ABS_280nm')
 
-ggsave("figures/NEE.png", p,units = "cm", height = 5, width = 9, dpi = 320)
+data.daily.WQ.mean <- data.daily %>%
+  group_by(site,year) %>%
+  summarise_at(vars(vars), funs(mean = mean(.,na.rm=TRUE)))
 
-# Plot daily FCH4 fluxes by site
-p <- ggplot() +
-  geom_point(data = data.daily, aes(x = as.Date(datetime), y = FCH4_gC*1000, color = factor(site)), size = 1) + scale_x_date(date_labels = "%b %y") + 
-  xlab('') + ylab(expression(FCH4~(mg~C~m^-2~d^-1))) +
-  scale_color_manual(values = c("MBPPW1"=colors_sites[4],
-                                "MBPPW2"=colors_sites[3]),
-                     name="") +
-  ylim(-10, 150) + theme(legend.position="bottom",text = element_text(size = 10))
-p  
+vars_names <- c("site","year",vars) # UPDATE LATER AND INCLUDE UNITS
+colnames(data.daily.WQ.mean) <- vars_names
 
-ggsave("figures/FCH4.pdf", p,units = "cm",height = 5, width = 6, dpi = 320)
+data.daily.WQ.mean[,vars] <- round(data.daily.WQ.mean[,vars])
 
-# cumulative fluxes (gC m-2 yr-1)
-# For the first year (June 1, 2021 to May 31, 2022)
-ind_s_Young <- which(data.daily$datetime == as.POSIXct("2021-06-01",tz = 'UTC') & data.daily$site == 'Young')
-ind_e_Young <- which(data.daily$datetime == as.POSIXct("2022-05-31",tz = 'UTC') & data.daily$site == 'Young')
+# PCA of WQ parameters - GO OVER ASSUMPTIONS IN MORE DETAIL!
+# 1. Extra WQ parameters
+vars <- c('site','FCH4_gC','pH','SO4','Specific_cond','DOC','TDN','NO3_NO2_N','NH4_N','DRP','TDP','TP','ABS_280nm')
 
-ind_s_Hogg <- which(data.daily$datetime == as.POSIXct("2021-06-01",tz = 'UTC') & data.daily$site == 'Hogg')
-ind_e_Hogg <- which(data.daily$datetime == as.POSIXct("2022-05-31",tz = 'UTC') & data.daily$site == 'Hogg')
+# Extract only variables of interest and non-NA data
+data.PCA.all <- na.omit(data.daily[,vars])
+data.PCA <- data.PCA.all[, -c(1:2)]
 
-# Hogg
-data.cummulative.Hogg <- data.daily[c(ind_s_Hogg:ind_e_Hogg), ] %>%
-  group_by(site) %>%
-  dplyr::summarize(FC_gC = sum(FC_gC, na.rm = TRUE),
-                   FCH4_gC = sum(FCH4_gC, na.rm = TRUE))
+# Look at correlation between variables - CHECK PCA Assumptions!
 
-data.cummulative.Hogg$GHG <- data.cummulative.Hogg$FC_gC*44.01/12.011+data.cummulative.Hogg$FCH4_gC*16.04/12.011*45
-data.cummulative.Hogg
+# 2. Compute PCA (from http://www.sthda.com/english/articles/31-principal-component-methods-in-r-practical-guide/118-principal-component-analysis-in-r-prcomp-vs-princomp/)
+res.pca <- prcomp(data.PCA, scale = TRUE)
 
-# Young
-data.cummulative.Young <- data.daily[c(ind_s_Young:ind_e_Young), ] %>%
-  group_by(site) %>%
-  dplyr::summarize(FC_gC = sum(FC_gC, na.rm = TRUE),
-                   FCH4_gC = sum(FCH4_gC, na.rm = TRUE))
+# 3. Visualize eigenvalues (scree plot). Show the percentage of variances explained by each principal component.
+fviz_eig(res.pca)
 
-# CHECK CALCULATION BASED ON MARION'S WORK (i.e, may need to account for C lost as CH4)
-data.cummulative.Young$GHG <- data.cummulative.Young$FC_gC*44.01/12.011+data.cummulative.Young$FCH4_gC*16.04/12.011*45
-data.cummulative.Young
+# 4. Plot biplot (UPDATE COLORS & better format figure)
+var_explained <- res.pca$sdev ^ 2 / sum(res.pca$sdev ^ 2)
+groups <- as.factor(data.PCA.all$site)
+
+p <- fviz_pca_biplot(res.pca, repel = TRUE,
+                col.var = "grey33", # Variables color
+                pointsize = data.PCA.all$FCH4_gC*1000,
+                pointshape = 21,
+                fill.ind = groups,
+                label = "var",
+                addEllipses = F,
+                legend.title = list(fill = "Site", size = "FCH4 (mgC m-2 d-1)"),
+                invisible = "quali",
+                labelsize = 3,
+                title = "") + 
+  geom_hline(yintercept=0, color='gray70', size=0.3,linetype="dashed") +
+  geom_vline(xintercept=0, color='gray70', size=0.3,linetype="dashed") + 
+  theme(text = element_text(size = 8),legend.position="bottom")+
+  labs(x = paste(paste("PC 1 (", round(var_explained[1]*100,1)),"%)", sep = ""), y = paste(paste("PC 2 (", round(var_explained[2]*100,1)),"%)", sep = ""))
+p
+
+ggsave("figures/PCA_WQ.png", p,units = "cm",height = 8, width = 12, dpi = 320)
+
+# Figures for the SI (Make figures nicer)
+
+# Box plots of WQ parameters
+
+# Specify variables (only one year for each of these at the moment)
+vars <- c('pH','Specific_cond','DOC','TDN','NO3_NO2_N','NH4_N','DRP','TDP','TP','ABS_280nm')
+nvars <- length(vars)
+
+# Create empty plot
+plots_bp <- plot.new()
+
+# Loop through each variables
+for (i in 1:nvars){
+  
+  var <- vars[[i]]
+  
+  p <- ggplot(data.daily, aes(as.factor(.data[["site"]]), .data[[var]])) + 
+    geom_boxplot(lwd=0.2,outlier.size=0.3) + xlab('') +
+    geom_signif(comparisons = list(c("Hogg", "Young")), na.rm = TRUE,
+                map_signif_level=TRUE, tip_length = 0,textsize=1.5,size = 0.2, 
+                y_position = max(data.daily[[var]],na.rm = T)-0.1*(max(data.daily[[var]],na.rm = T)-min(data.daily[[var]],na.rm = T))) + 
+    theme(text = element_text(size = 6))
+  
+  plots_bp[[i]] <- p
+}
+
+p <- ggarrange(plotlist=plots_bp)
+
+# Confirm statistics!
+ggsave("figures/WQ_bp.png", p,units = "cm",height = 8, width = 12, dpi = 320)
+
+var <- c('SO4')
+
+p <- ggplot(data.daily, aes(as.factor(.data[["year"]]), .data[[var]],fill = .data[["site"]])) + 
+  geom_boxplot() + xlab('') + theme_bw() + theme(text = element_text(size = 6))
+p
+
+ggsave("figures/SO4_bp.png", p,units = "cm",height = 5, width = 6, dpi = 320)
+
+# Confirm statistics!
+# Two-way anova (http://www.sthda.com/english/wiki/two-way-anova-test-in-r OR https://www.datanovia.com/en/lessons/repeated-measures-anova-in-r/)
+res.aov2 <- aov(data.daily[[var]]~data.daily[["site"]]*data.daily[["year"]])
+summary(res.aov2)
+
+# Correlation plot for WQ variables

@@ -224,6 +224,7 @@ data.daily <- data %>%
                    FCH4_gC = mean(FCH4_PI_F_RF, na.rm = TRUE)*conv_ch4,
                    WTD = mean(WTD, na.rm = TRUE),
                    TS = mean(TS_2, na.rm = TRUE),
+                   TA = mean(TA_1_1_1, na.rm = TRUE),
                    SW_IN = mean(SW_IN_1_1_1, na.rm = TRUE)*conv_energy,
                    PPFD_IN = mean(PPFD_IN_1_1_1, na.rm = TRUE),
                    LE = mean(LE_PI_F_MDS, na.rm = TRUE)*conv_energy,

@@ -24,6 +24,7 @@ library(dplyr)
 library(tidyr)
 library(magrittr)
 library(filesstrings)
+library(kableExtra)
 ```
 
 # Abstract {.unnumbered}
@@ -61,6 +62,17 @@ MBPPW2, located at 50.3705˚N, -100.5339˚W, is an isolated grassland marsh abou
 ## Gap-filling, NEE partitioning, and annual budget computation
 
 ## Supporting measurements
+
+### Water quality measurements
+
+```{r, echo=FALSE, warning = FALSE, message = FALSE}
+source(here("code/2_Environmental_conditions_daily_fluxes_budgets_and_uncertainty.R"))
+knitr::kable(data.daily.WQ.mean)
+```
+
+Figure [-@fig-PCA].
+
+![PCA.](../figures/PCA_WQ.png){#fig-PCA}
 
 # Results
 
