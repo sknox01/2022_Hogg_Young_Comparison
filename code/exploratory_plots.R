@@ -11,6 +11,12 @@ library(ggpubr)
 library(hms)
 library(zoo)
 library(here)
+library(psych)
+library(REdaS)
+library(vegan)
+library(reshape)
+library(rstatix)
+library(multcompView)
 
 # Explore 30 min data
 load(here("output/30min_data.Rda"))
@@ -223,19 +229,56 @@ vars <- c('site','FCH4_gC','pH','SO4','Specific_cond','DOC','TDN','NO3_NO2_N','N
 data.PCA.all <- na.omit(data.daily[,vars])
 data.PCA <- data.PCA.all[, -c(1:2)]
 
+pairs.panels(
+  data.PCA,
+  main = "WQ vars",
+  gap = 0, # set to zero for no gap between plot panels
+  lm = TRUE, # draw linear regression lines for pairs
+  stars = TRUE, # display significance
+  bg = c("red", "blue")[as.factor(data.PCA.all$site)], # color based on site
+  pch = 21) # data point shape
+
 # Look at correlation between variables - CHECK PCA Assumptions!
 corrplot(cor(data.PCA))
 
+# Bartlett's Test Of Sphericity (https://swampthingecology.org/blog/pca-basics-in-rstats/)
+bart_spher(data.PCA)
+KMOS(data.PCA)
+
+# The data.PCA dataset appears to be suitable for factor analysis. The KMO value for the entire dataset is above the suggested 0.5 threshold. 
+# And based on Sphericity test (bart_spher()) the results looks good to move forward with a PCA analysis. 
+
 # Compute PCA (from http://www.sthda.com/english/articles/31-principal-component-methods-in-r-practical-guide/118-principal-component-analysis-in-r-prcomp-vs-princomp/)
-res.pca <- prcomp(data.PCA, scale = TRUE)
+res.pca <- prcomp(data.PCA, center = TRUE, scale. = TRUE)
+
+# “loadings” of a PCA. (https://rpubs.com/carabidus/465971)
+pca_loadings <- res.pca$rotation
+kable(pca_loadings, caption = "PCA Loadings") %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive"),
+                full_width = F)
+
+# Orthogonality of PCs
+pairs.panels(
+  res.pca$x,
+  main = "PCA Correlation Summary",
+  gap = 0, # set to zero for no gap between plot panels
+  lm = TRUE, # draw linear regression lines for pairs
+  stars = TRUE, # display significance
+  bg = c("red", "blue")[as.factor(data.PCA.all$site)], # color based on sex 
+  pch = 21) # data point shape
 
 #Visualize eigenvalues (scree plot). Show the percentage of variances explained by each principal component.
 fviz_eig(res.pca)
 
+pca_summary <- summary(res.pca)$importance %>%
+  as.data.frame()
+kable(pca_summary, caption = "PCA Summary") %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive"), full_width = F)
+
 groups <- as.factor(data.PCA.all$site)
 fviz_pca_biplot(res.pca, repel = TRUE,
                 col.var = "grey33", # Variables color
-                pointsize = data.PCA.all$FCH4_gC*1000,
+                #pointsize = data.PCA.all$FCH4_gC*1000,
                 pointshape = 21,
                 fill.ind = groups,
                 label = "var",
@@ -264,8 +307,58 @@ lm <- lm(data.daily[[var]]~data.daily[["site"]]*data.daily[["year"]])
 summary(lm)
 
 # Two-way anova (http://www.sthda.com/english/wiki/two-way-anova-test-in-r OR https://www.datanovia.com/en/lessons/repeated-measures-anova-in-r/)
-res.aov2 <- aov(data.daily[[var]]~data.daily[["site"]]*data.daily[["year"]])
+var <- 'SO4'
+
+data.daily %>%
+  group_by(site, year) %>%
+  get_summary_stats(SO4, type = "mean_sd")
+
+# NOTE: SEE Compute two-way ANOVA test in R for UNBALANCED designs!
+
+# Test for normality - Normally distributed as p > 0.05
+# (https://www.datanovia.com/en/lessons/repeated-measures-anova-in-r/)
+data.daily %>%
+  group_by(site, year) %>%
+  shapiro_test(SO4)
+
+# but check outliers further
+ggqqplot(data.daily, "SO4", ggtheme = theme_bw()) +
+  facet_grid(site ~ year, labeller = "label_both")
+
+# Computation (used http://www.sthda.com/english/wiki/two-way-anova-test-in-r#compute-two-way-anova-test-in-r-balanced-designs)
+data.daily.SO4 <- na.omit(data.daily[,c('site','year','SO4')])
+
+res.aov2 <- aov(data.daily.SO4[[var]]~data.daily.SO4[["site"]]*data.daily.SO4[["year"]])
 summary(res.aov2)
+
+group_by(data.daily.SO4, site, year) %>%
+  summarise(
+    count = n(),
+    mean = mean(SO4, na.rm = TRUE),
+    sd = sd(SO4, na.rm = TRUE)
+  )
+
+# Tukey multiple pairwise-comparisons
+# Also see: https://statdoe.com/two-way-anova-in-r/#comparing-means-by-tukeys-test
+tukey <- TukeyHSD(res.aov2)
+
+tukey.cld <- multcompLetters4(res.aov2, tukey)
+print(tukey.cld)
+
+# Check assumptions (http://www.sthda.com/english/wiki/two-way-anova-test-in-r#compute-two-way-anova-test-in-r-balanced-designs)
+# 1. Homogeneity of variances
+plot(res.aov2, 1)
+
+#Use the Levene’s test to check the homogeneity of variances. The function leveneTest() [in car package] will be used:
+leveneTest(SO4 ~ site*year, data = data.daily.SO4)
+
+# NOTE: From the output above we can see that the p-value IS less than the significance level of 0.05. 
+# This means that there is evidence to suggest that the variance across groups is statistically significantly different. 
+# Therefore, we CAN'T assume the homogeneity of variances in the different treatment groups.
+
+# 2. Normality
+plot(res.aov2, 2)
+# Points don't fall approximately along this reference line, we CAN'T assume normality.
 
 # Explore linear model - simple linear regression
 data.daily.na.omit <- na.omit(data.daily[,c("FCH4_gC","TA","WTD","SO4_interp","site")]) 

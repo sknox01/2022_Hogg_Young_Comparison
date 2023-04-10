@@ -14,6 +14,8 @@ library(here)
 library(corrplot)
 library(factoextra)
 
+# Reconcile with exploratory_plots & clean up exploratory_plots 
+
 # Load data
 load(here("output/daily_data.Rda"))
 
@@ -93,14 +95,14 @@ nvars <- length(vars)
 # Create empty plot
 plots_bp <- plot.new()
 
-# Loop through each variables
+# Loop through each variables - CHECK NA.OMIT once we have all the data
 for (i in 1:nvars){
   
   var <- vars[[i]]
   
-  p <- ggplot(data.daily, aes(as.factor(.data[["site"]]), .data[[var]])) + 
+  p <- ggplot(na.omit(data.daily), aes(as.factor(.data[["site"]]), .data[[var]])) + 
     geom_boxplot(lwd=0.2,outlier.size=0.3) + xlab('') +
-    geom_signif(comparisons = list(c("Hogg", "Young")), na.rm = TRUE,
+    geom_signif(comparisons = list(c("Hogg", "Young")), na.rm = TRUE, test = "wilcox.test",
                 map_signif_level=TRUE, tip_length = 0,textsize=1.5,size = 0.2, 
                 y_position = max(data.daily[[var]],na.rm = T)-0.1*(max(data.daily[[var]],na.rm = T)-min(data.daily[[var]],na.rm = T))) + 
     theme(text = element_text(size = 6))
@@ -110,7 +112,18 @@ for (i in 1:nvars){
 
 p <- ggarrange(plotlist=plots_bp)
 
-# Confirm statistics!
+# Check if it should be a t-test or Wilcoxon test....
+# The results of these experiments indicate that Student’s t-test should definitely be avoided for sample sizes smaller than 20 (https://www.datascienceblog.net/post/statistical_test/parametric_sample_size/)
+# See also https://www.datascienceblog.net/post/statistical_test/signed_wilcox_rank_test/
+
+# Confirm statistics! or should it be t-test? Probably t-test eventually
+W_test <- list()
+for (i in 1:nvars){
+  
+  var <- vars[[i]]
+  W_test[[i]] <- wilcox.test(na.omit(data.daily)[[var]]~na.omit(data.daily)[["site"]])
+}
+
 ggsave("figures/WQ_bp.png", p,units = "cm",height = 8, width = 12, dpi = 320)
 
 var <- c('SO4')
@@ -126,4 +139,3 @@ ggsave("figures/SO4_bp.png", p,units = "cm",height = 5, width = 6, dpi = 320)
 res.aov2 <- aov(data.daily[[var]]~data.daily[["site"]]*data.daily[["year"]])
 summary(res.aov2)
 
-# Correlation plot for WQ variables
