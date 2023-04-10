@@ -17,6 +17,10 @@ library(vegan)
 library(reshape)
 library(rstatix)
 library(multcompView)
+library(ggpubr)
+library(cowplot)
+library(emmeans)
+library(multcomp)
 
 # Explore 30 min data
 load(here("output/30min_data.Rda"))
@@ -313,8 +317,6 @@ data.daily %>%
   group_by(site, year) %>%
   get_summary_stats(SO4, type = "mean_sd")
 
-# NOTE: SEE Compute two-way ANOVA test in R for UNBALANCED designs!
-
 # Test for normality - Normally distributed as p > 0.05
 # (https://www.datanovia.com/en/lessons/repeated-measures-anova-in-r/)
 data.daily %>%
@@ -360,6 +362,149 @@ leveneTest(SO4 ~ site*year, data = data.daily.SO4)
 plot(res.aov2, 2)
 # Points don't fall approximately along this reference line, we CAN'T assume normality.
 
+# NOTE: SEE Compute two-way ANOVA test in R for UNBALANCED designs! (unbalanced if not the same across all combos: https://www.statology.org/balanced-vs-unbalanced-designs/)
+# Type I sum of squares is the default hypothesis testing method used by the anova() function
+# from https://stats.libretexts.org/Bookshelves/Applied_Statistics/Book%3A_Learning_Statistics_with_R_-_A_tutorial_for_Psychology_Students_and_other_Beginners_(Navarro)/16%3A_Factorial_ANOVA/16.10%3A_Factorial_ANOVA_3-_Unbalanced_Designs
+# The big problem with using Type I sum of squares is the fact that it really does depend on the order in which you enter the variables. 
+# As such, the Type I testing strategy really does treat the first main effect as if it had a kind of theoretical primacy over the second one. In my experience there is very rarely if ever any theoretically primacy of this kind that would justify treating any two main effects asymmetrically.
+#The consequence of all this is that Type I tests are very rarely of much interest, and so we should move on to discuss Type II tests and Type III tests. 
+# Okay, so we’ve seen Type I and III tests now, and both are pretty straightforward: Type I tests are performed by gradually adding terms one at a time, whereas Type III tests are performed by taking the full model and looking to see what happens when you remove each term. 
+# However, both have some serious flaws: Type I tests are dependent on the order in which you enter the terms, and Type III tests are dependent on how you code up your contrasts. Because of these flaws, neither one is easy to interpret. 
+# Type II tests are a little harder to describe, but they avoid both of these problems, and as a result they are a little easier to interpret.
+
+# Type II tests have some clear advantages over Type I and Type III tests. They don’t depend on the order in which you specify factors (unlike Type I), and they don’t depend on the contrasts that you use to specify your factors (unlike Type III). 
+# And although opinions may differ on this last point, and it will definitely depend on what you’re trying to do with your data, I do think that the hypothesis tests that they specify are more likely to correspond to something that you actually care about. 
+# As a consequence, I find that it’s usually easier to interpret the results of a Type II test than the results of a Type I or Type III test. For this reason, my tentative advice is that, if you can’t think of any obvious model comparisons that directly map onto your research questions but you still want to run an ANOVA in an unbalanced design, Type II tests are probably a better choice than Type I or Type III.
+
+model <- lm(SO4~site*year, data = data.daily.SO4)
+anova.SO4 <- car::Anova(model,type = 2) 
+
+# NOTE: If the sample sizes are not equal and the assumption of equal variances is violated, you could instead perform a non-parametric equivalent to an ANOVA such as the Kruskal-Wallis test.
+# https://www.statology.org/balanced-vs-unbalanced-designs/
+
+# Using the Kruskal-Wallis Test, we can decide whether the population distributions are identical without assuming them to follow the normal distribution.
+# https://www.cfholbert.com/blog/nonparametric_two_way_anova/
+
+# One method that is not unduly affected by violations of the normality and homoscedasticity assumptions of parametric ANOVA is to transform the data values to their ranks, and then compute a parametric two-way ANOVA on the data ranks.
+# This rank transformation procedure can be used to determine whether the ranks differ from group to group. Post-hoc comparisons can be performed on the data ranks to determine which groups are different from each other. 
+
+data.daily.SO4$site <- as.factor(data.daily.SO4$site)
+data.daily.SO4$year <- as.factor(data.daily.SO4$year)
+
+str(data.daily.SO4)
+
+# Create frequency table
+with(data.daily.SO4, table(site, year))
+
+# summary stats
+data.daily.SO4 %>%
+  group_by(year, site) %>%
+  summarise(
+    count = n(),
+    mean = round(mean(SO4, na.rm = TRUE), 2),
+    median = round(median(SO4, na.rm = TRUE), 2),
+    sd = round(sd(SO4, na.rm = TRUE), 2),
+    cv = round(sd/mean, 2),
+  ) %>%
+  ungroup()
+
+# Box plot
+p1 <- ggboxplot(
+  data.daily.SO4, x = 'site', y = 'SO4', fill = 'year',
+  palette = c('#257ABA', '#C9B826')
+)
+
+# Line plot
+p2 <- ggline(
+  data.daily.SO4, x = 'site', y = 'SO4', color = 'year',
+  add = c('mean_se', 'dotplot'), size = 1,
+  palette = c('#257ABA', '#C9B826'))
+
+plot_grid(p1, p2, ncol = 1, align = 'v')
+
+# Let’s first perform two-way ANOVA on the original data.
+aov.org <- aov(
+  SO4 ~ year * site, data = data.daily.SO4,
+  contrasts = list(
+    site = 'contr.sum',
+    year = 'contr.sum'
+  )
+)
+Anova(aov.org, type = 'III')
+
+# ANOVA procedure on log-transformed data
+aov.log <- aov(
+  log(SO4) ~ year * site, data = data.daily.SO4,
+  contrasts = list(
+    site = 'contr.sum',
+    year = 'contr.sum'
+  )
+)
+Anova(aov.log, type = 'III')
+
+# Finaly, let’s perform two-way ANOVA on the rank-transformed data. 
+# Ranking is one of many procedures used to transform data that do not meet the assumptions of normality. 
+# Conover and Iman (1981) provided a review of the four main types of rank transformations. 
+# One method replaces each original data value by its rank (from 1 for the smallest to N for the largest, where N is the combined data sample size). 
+# This rank-based procedure has been recommended as being robust to non-normal errors, resistant to outliers, and highly efficient for many distributions.
+
+# ANOVA procedure on rank-transformed data
+aov.rnk <- aov(
+  rank(SO4) ~ year * site, data = data.daily.SO4,
+  contrasts = list(
+    site = 'contr.sum',
+    year = 'contr.sum'
+  )
+)
+Anova(aov.rnk, type = 'III') # USE THIS ONE - no significant interaction between year & site found
+
+model.tables(aov.org, type = "means", se = TRUE)
+
+# Let’s inspect the residuals from each model for normality. 
+res.org = aov.org$resid
+res.log = aov.log$resid
+res.rnk = aov.rnk$resid
+qqnorm(
+  res.org, pch = 20, main = "Original Data",
+  cex.lab = 1, cex.axis = 0.7, cex.main = 1
+)
+qqline(res.org)
+
+qqnorm(
+  res.log, pch = 20, main = "Log-Transformed",
+  cex.lab = 1, cex.axis = 0.7, cex.main = 1
+)
+qqline(res.log)
+
+qqnorm(
+  res.rnk, pch = 20, main = "Rank-Transformed",
+  cex.lab = 1, cex.axis = 0.7, cex.main = 1
+)
+qqline(res.rnk)
+
+# Now, let’s inspect the residuals versus the fitted values as a visual check for homogeneity of variances.
+plot(aov.org, 1, main = "Original Data")
+plot(aov.log, 1, main = "Log-Transformed")
+plot(aov.rnk, 1, main = "Rank-Transformed")
+
+# Compute estimated marginal means for factor combinations
+emmeans(aov.rnk, pairwise ~ year | site) # SO4 different between years for each site
+emmeans(aov.rnk, pairwise ~ site | year) # SO4 different between site for each year
+
+# Let’s perform something akin to a one-way ANOVA
+em_out_category <- emmeans(aov.rnk,  ~ year | site) 
+print(em_out_category)
+
+em_out_category %>% 
+  pairs() %>% 
+  test(joint = TRUE)
+
+pairs(em_out_category)
+
+summary(glht(aov.rnk, linfct = mcp(site = "Tukey"))) # if multiple factors this is useful.
+
+# Summary - use rank, type 3 two way ANOVA
+
 # Explore linear model - simple linear regression
 data.daily.na.omit <- na.omit(data.daily[,c("FCH4_gC","TA","WTD","SO4_interp","site")]) 
 
@@ -370,9 +515,6 @@ ggplot(data.daily.na.omit, aes(x=predict(lm), y= data.daily.na.omit$FCH4_gC)) +
   geom_point() +
   geom_abline(intercept=0, slope=1) + ylim(-0.01,0.08)+ xlim(-0.01,0.08)+
   labs(x='Predicted Values', y='Actual Values')
-
-
-
 
 
 # Plot daily CO2 fluxes by site

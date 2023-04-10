@@ -1,4 +1,3 @@
-# Load packages
 library(lubridate) # work with dates
 library(dplyr)     # data manipulation (filter, summarize, mutate)
 library(ggplot2)   # graphics
@@ -11,8 +10,16 @@ library(ggpubr)
 library(hms)
 library(zoo)
 library(here)
-library(corrplot)
-library(factoextra)
+library(psych)
+library(REdaS)
+library(vegan)
+library(reshape)
+library(rstatix)
+library(multcompView)
+library(ggpubr)
+library(cowplot)
+library(emmeans)
+library(multcomp)
 
 # Reconcile with exploratory_plots & clean up exploratory_plots 
 
@@ -31,6 +38,10 @@ ind_Hogg_last <- ind_Hogg[length(ind_Hogg)]
 data.daily <- data.daily[c(ind_s_Hogg:ind_Hogg_last,ind_s_Young:ind_Young_last), ] 
 
 # Figures in body of the manuscript
+# Color palette
+colors_sites <- c("#999999", "#E69F00", "#56B4E9", "#009E73",
+                  "#F0E442", "#0072B2", "#D55E00", "#CC79A7",
+                  '#257ABA', '#C9B826') 
 
 # water quality data
 # Table summary of WQ data
@@ -45,7 +56,7 @@ colnames(data.daily.WQ.mean) <- vars_names
 
 data.daily.WQ.mean[,vars] <- round(data.daily.WQ.mean[,vars])
 
-# PCA of WQ parameters - GO OVER ASSUMPTIONS IN MORE DETAIL!
+# PCA of WQ parameters 
 # 1. Extra WQ parameters
 vars <- c('site','FCH4_gC','pH','SO4','Specific_cond','DOC','TDN','NO3_NO2_N','NH4_N','DRP','TDP','TP','ABS_280nm')
 
@@ -53,13 +64,15 @@ vars <- c('site','FCH4_gC','pH','SO4','Specific_cond','DOC','TDN','NO3_NO2_N','N
 data.PCA.all <- na.omit(data.daily[,vars])
 data.PCA <- data.PCA.all[, -c(1:2)]
 
-# Look at correlation between variables - CHECK PCA Assumptions!
+# 2. Check assumptions. Bartlett's Test Of Sphericity (https://swampthingecology.org/blog/pca-basics-in-rstats/)
+bart_spher(data.PCA)
+KMOS(data.PCA)
 
-# 2. Compute PCA (from http://www.sthda.com/english/articles/31-principal-component-methods-in-r-practical-guide/118-principal-component-analysis-in-r-prcomp-vs-princomp/)
+# The data.PCA dataset appears to be suitable for factor analysis. The KMO value for the entire dataset is above the suggested 0.5 threshold. 
+# And based on Sphericity test (bart_spher()) the results looks good to move forward with a PCA analysis. 
+
+# 3. Compute PCA (from http://www.sthda.com/english/articles/31-principal-component-methods-in-r-practical-guide/118-principal-component-analysis-in-r-prcomp-vs-princomp/)
 res.pca <- prcomp(data.PCA, scale = TRUE)
-
-# 3. Visualize eigenvalues (scree plot). Show the percentage of variances explained by each principal component.
-fviz_eig(res.pca)
 
 # 4. Plot biplot (UPDATE COLORS & better format figure)
 var_explained <- res.pca$sdev ^ 2 / sum(res.pca$sdev ^ 2)
@@ -67,9 +80,10 @@ groups <- as.factor(data.PCA.all$site)
 
 p <- fviz_pca_biplot(res.pca, repel = TRUE,
                 col.var = "grey33", # Variables color
-                pointsize = data.PCA.all$FCH4_gC*1000,
+                #pointsize = data.PCA.all$FCH4_gC*1000,
                 pointshape = 21,
                 fill.ind = groups,
+                palette = colors_sites[c(9,2)],
                 label = "var",
                 addEllipses = F,
                 legend.title = list(fill = "Site", size = "FCH4 (mgC m-2 d-1)"),
@@ -112,11 +126,11 @@ for (i in 1:nvars){
 
 p <- ggarrange(plotlist=plots_bp)
 
-# Check if it should be a t-test or Wilcoxon test....
+# Check if it should be a t-test or Wilcoxon test....Not normally distributed so using Wilcoxon test 
 # The results of these experiments indicate that Student’s t-test should definitely be avoided for sample sizes smaller than 20 (https://www.datascienceblog.net/post/statistical_test/parametric_sample_size/)
 # See also https://www.datascienceblog.net/post/statistical_test/signed_wilcox_rank_test/
 
-# Confirm statistics! or should it be t-test? Probably t-test eventually
+# Confirm statistics! or should it be t-test? 
 W_test <- list()
 for (i in 1:nvars){
   
@@ -126,16 +140,18 @@ for (i in 1:nvars){
 
 ggsave("figures/WQ_bp.png", p,units = "cm",height = 8, width = 12, dpi = 320)
 
-var <- c('SO4')
+# For sites with variables for both years
+data.daily.SO4 <- na.omit(data.daily[,c('site','year','SO4')])
+data.daily.SO4$site <- as.factor(data.daily.SO4$site)
+data.daily.SO4$year <- as.factor(data.daily.SO4$year)
 
-p <- ggplot(data.daily, aes(as.factor(.data[["year"]]), .data[[var]],fill = .data[["site"]])) + 
-  geom_boxplot() + xlab('') + theme_bw() + theme(text = element_text(size = 6))
-p
+p1 <- ggboxplot(
+  data.daily.SO4, x = 'site', y = 'SO4', fill = 'year',
+  palette = colors_sites[c(9,2)],
+  lwd=0.2,
+  outlier.size=0.3
+)+theme(text = element_text(size = 6))
+p1 
 
-ggsave("figures/SO4_bp.png", p,units = "cm",height = 5, width = 6, dpi = 320)
-
-# Confirm statistics!
-# Two-way anova (http://www.sthda.com/english/wiki/two-way-anova-test-in-r OR https://www.datanovia.com/en/lessons/repeated-measures-anova-in-r/)
-res.aov2 <- aov(data.daily[[var]]~data.daily[["site"]]*data.daily[["year"]])
-summary(res.aov2)
+ggsave("figures/SO4_bp.png", p1,units = "cm",height = 5, width = 6, dpi = 320)
 
