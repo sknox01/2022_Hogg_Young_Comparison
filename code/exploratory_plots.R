@@ -21,6 +21,7 @@ library(ggpubr)
 library(cowplot)
 library(emmeans)
 library(multcomp)
+library(kableExtra)
 
 # Explore 30 min data
 load(here("output/30min_data.Rda"))
@@ -442,7 +443,7 @@ aov.log <- aov(
 )
 Anova(aov.log, type = 'III')
 
-# Finaly, let’s perform two-way ANOVA on the rank-transformed data. 
+# Finally, let’s perform two-way ANOVA on the rank-transformed data. 
 # Ranking is one of many procedures used to transform data that do not meet the assumptions of normality. 
 # Conover and Iman (1981) provided a review of the four main types of rank transformations. 
 # One method replaces each original data value by its rank (from 1 for the smallest to N for the largest, where N is the combined data sample size). 
@@ -505,11 +506,56 @@ summary(glht(aov.rnk, linfct = mcp(site = "Tukey"))) # if multiple factors this 
 
 # Summary - use rank, type 3 two way ANOVA
 
-# Explore linear model - simple linear regression
-data.daily.na.omit <- na.omit(data.daily[,c("FCH4_gC","TA","WTD","SO4_interp","site")]) 
+# Explore mixed effects modeling
+data.daily.model <- na.omit(data.daily[,c("FCH4_gC","TA","WTD","SO4_interp","site","year")]) 
+data.daily.model$site <- as.factor(data.daily.model$site)
+data.daily.model$year <- as.factor(data.daily.model$year)
 
-lm <- lmer(FCH4_gC~TA^2+WTD+SO4_interp,data=data.daily.na.omit)  
-summary(lm)
+# Transform FCH4 to make it normally distributed - EXCLUDING NEGATIVE VALUES FOR NOW
+data.daily.model$FCH4_gC_log <- log(data.daily.model$FCH4_gC)
+
+pairs.panels(
+  data.daily.model[,c("FCH4_gC","FCH4_gC_tf","TA","WTD","SO4_interp")],
+  main = "",
+  gap = 0, # set to zero for no gap between plot panels
+  lm = TRUE, # draw linear regression lines for pairs
+  stars = TRUE, # display significance
+  bg = c('#257ABA', '#C9B826')[data.daily.model$site], # color based on site
+  pch = 21) # data point shape
+
+# Test for normality - Normally distributed if p > 0.05 (didn't group as above)
+# EXPLORE HOW TO MAKE DATA NORMALLY DISTRIBUTED LATER!
+# (https://www.datanovia.com/en/lessons/repeated-measures-anova-in-r/)
+
+data.daily.model %>%
+  group_by(site, year) %>%
+  shapiro_test(FCH4_gC_log)
+
+shapiro_test(data.daily.model$WTD)
+shapiro_test(data.daily.model$TA)
+shapiro_test(log(data.daily.model$SO4_interp))
+shapiro_test(data.daily.model$FCH4_gC_log)
+shapiro_test(data.daily.model$FCH4_gC)
+
+p <- ggplot(data.daily.model, aes(x=FCH4_gC_log)) + 
+  geom_histogram()
+p
+
+# but check outliers further...DIDN'T EXPLORE THIS YET FOR THIS DATASET
+ggqqplot(data.daily, "SO4", ggtheme = theme_bw()) +
+  facet_grid(site ~ year, labeller = "label_both")
+
+# Nested Mixed Effect Mode 
+# https://yury-zablotski.netlify.app/post/mixed-effects-models-2/
+  
+https://wiki.qcbs.ca/r_workshop6
+http://r.qcbs.ca/Workshops/workshop06/workshop06-en/workshop06-en.html#1
+https://www.zoology.ubc.ca/~bio501/R/workshops/lme.html#Yukon_yarrow2
+https://www.sfu.ca/~lmgonigl/materials-qm/lectures/05.pdf
+https://journals.sagepub.com/doi/full/10.1177/2515245920960351
+
+
+model <- lmer(response ~ predictor + (1|doctor/patient))
 
 ggplot(data.daily.na.omit, aes(x=predict(lm), y= data.daily.na.omit$FCH4_gC)) +
   geom_point() +

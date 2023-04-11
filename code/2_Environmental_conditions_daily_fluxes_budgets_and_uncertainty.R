@@ -20,6 +20,7 @@ library(ggpubr)
 library(cowplot)
 library(emmeans)
 library(multcomp)
+library(factoextra)
 
 # Reconcile with exploratory_plots & clean up exploratory_plots 
 
@@ -51,13 +52,15 @@ data.daily.WQ.mean <- data.daily %>%
   group_by(site,year) %>%
   summarise_at(vars(vars), funs(mean = mean(.,na.rm=TRUE)))
 
+save(data.daily.WQ.mean,file="output/daily_WQ_mean.Rda")
+
 vars_names <- c("site","year",vars) # UPDATE LATER AND INCLUDE UNITS
 colnames(data.daily.WQ.mean) <- vars_names
 
 data.daily.WQ.mean[,vars] <- round(data.daily.WQ.mean[,vars])
 
 # PCA of WQ parameters 
-# 1. Extra WQ parameters
+# 1. Extra WQ parameters 
 vars <- c('site','FCH4_gC','pH','SO4','Specific_cond','DOC','TDN','NO3_NO2_N','NH4_N','DRP','TDP','TP','ABS_280nm')
 
 # Extract only variables of interest and non-NA data
@@ -88,7 +91,7 @@ p <- fviz_pca_biplot(res.pca, repel = TRUE,
                 addEllipses = F,
                 legend.title = list(fill = "Site", size = "FCH4 (mgC m-2 d-1)"),
                 invisible = "quali",
-                labelsize = 3,
+                labelsize = 2,
                 title = "") + 
   geom_hline(yintercept=0, color='gray70', size=0.3,linetype="dashed") +
   geom_vline(xintercept=0, color='gray70', size=0.3,linetype="dashed") + 
@@ -96,7 +99,7 @@ p <- fviz_pca_biplot(res.pca, repel = TRUE,
   labs(x = paste(paste("PC 1 (", round(var_explained[1]*100,1)),"%)", sep = ""), y = paste(paste("PC 2 (", round(var_explained[2]*100,1)),"%)", sep = ""))
 p
 
-ggsave("figures/PCA_WQ.png", p,units = "cm",height = 8, width = 12, dpi = 320)
+ggsave("figures/PCA_WQ.png", p,units = "cm",height = 8, width = 6, dpi = 320)
 
 # Figures for the SI (Make figures nicer)
 

@@ -64,21 +64,42 @@ MBPPW2, located at 50.3705˚N, -100.5339˚W, is an isolated grassland marsh abou
 ## Supporting measurements
 
 ### Water quality measurements
+ABS 280 - does higher mean more recalcitrant DOC?
 
-```{r, echo=FALSE, warning = FALSE, message = FALSE}
-source(here("code/2_Environmental_conditions_daily_fluxes_budgets_and_uncertainty.R"))
-knitr::kable(data.daily.WQ.mean)
-```
+## Statistical methods
 
-Figure [-@fig-PCA].
+All data processing and statistical analyses were conducted using R (R Core Team, 2019). A two-sample Wilcoxon test was used to assess differences in water quality parameters between sites (NOTE TO DELETE: this is for variables with only 1 year) due to the small sample size and the fact that a number of quality parameters were not normally distributed.This was done using the `wilcox.test` function from the `stats` package. 
 
-![PCA.](../figures/PCA_WQ.png){#fig-PCA}
+When water quality parameters were available for multiple years, significant differences in water quality parameters between sites, years and the interaction between site and years were assessed using a two-way ANOVA with Type III Sums of Squares on the rank-transformed data, as ranking can be used to transform data that do not meet the assumptions of normality (ref). Here, each original data value was replaced by its rank, with 1 for the smallest value to N for the largest, where N is the combined data sample size. This rank-based approach is robust to non-normal errors, resistant to outliers, and is effective for many distributions. 
+
+PCA
+
+As certain water quality parameters were highly correlated (Figure [-@fig-PCA]), we only selected a subset of water quality parameters for the hierarchical mixed model. To capture the primary differences in water quality parameters between sites, only $SO_{4}^{2-}$, TP, and pH were included in the model. 
 
 # Results
 
 ## Weather and hydrological conditions
 
+### Water quality
 
+Significant differences were observed in water quality parameters across sites (Table [-@tbl-WQ], Figure [-@fig-PCA]). Averaged across years, Hogg had significantly higher $SO_{4}^{2-}$, specific conductivity, dissolved organic carbon (DOC), total dissolved nitrogen (TDN), and Specific ultraviolet absorbance at 280 nm (ABS 280) than Young. Conversely, dissolved reactive phosphorus (DRP), total dissolved phosphorus (TDP) concentrations than Young, total phosphorus (TP) was significantly lower at Hogg than Young. No significant differences in pH, NO3 or NO2, or NH4 were observed between sites.
+
+```{r, echo=FALSE, warning = FALSE, message = FALSE}
+#| label: tbl-WQ
+#| tbl-cap: Differences in water quality parameters across sites.
+# Make sure there are no empty lines in the code of the cross referencing won't work!
+load(here("output/daily_WQ_mean.Rda"))
+WQ <- data.daily.WQ.mean
+knitr::kable(WQ)
+```
+
+Figure [-@fig-SO4].
+
+![SO4.](../figures/SO4_bp.png){#fig-SO4}
+
+Figure [-@fig-PCA].
+
+![PCA.](../figures/PCA_WQ.png){#fig-PCA}
 
 Figure [-@fig-NEE].
 
@@ -101,5 +122,9 @@ depletion   in   SO42-concentrations   has   also   beendocumented   by   Phipps
 
 ::: {#refs}
 :::
+
+{{< pagebreak >}}
+
+# Tables {.unnumbered}
 
 {{< pagebreak >}}
