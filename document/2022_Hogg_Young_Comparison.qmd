@@ -72,8 +72,7 @@ All data processing and statistical analyses were conducted using R (R Core Team
 
 When water quality parameters were available for multiple years, significant differences in water quality parameters between sites, years and the interaction between site and years were assessed using a two-way ANOVA with Type III Sums of Squares on the rank-transformed data, as ranking can be used to transform data that do not meet the assumptions of normality (ref). Here, each original data value was replaced by its rank, with 1 for the smallest value to N for the largest, where N is the combined data sample size. This rank-based approach is robust to non-normal errors, resistant to outliers, and is effective for many distributions. 
 
-PCA
-
+Multivariate associations of water quality parameters across sites were analyzed using principal component analysis (PCA). All variables were centered and scaled, and PCA was done using the prcomp function in base R. 
 As certain water quality parameters were highly correlated (Figure [-@fig-PCA]), we only selected a subset of water quality parameters for the hierarchical mixed model. To capture the primary differences in water quality parameters between sites, only $SO_{4}^{2-}$, TP, and pH were included in the model. 
 
 # Results

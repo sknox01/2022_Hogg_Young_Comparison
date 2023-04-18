@@ -52,12 +52,12 @@ data.daily.WQ.mean <- data.daily %>%
   group_by(site,year) %>%
   summarise_at(vars(vars), funs(mean = mean(.,na.rm=TRUE)))
 
-save(data.daily.WQ.mean,file="output/daily_WQ_mean.Rda")
-
 vars_names <- c("site","year",vars) # UPDATE LATER AND INCLUDE UNITS
 colnames(data.daily.WQ.mean) <- vars_names
 
 data.daily.WQ.mean[,vars] <- round(data.daily.WQ.mean[,vars])
+
+save(data.daily.WQ.mean,file="output/daily_WQ_mean.Rda")
 
 # PCA of WQ parameters 
 # 1. Extra WQ parameters 
@@ -75,7 +75,7 @@ KMOS(data.PCA)
 # And based on Sphericity test (bart_spher()) the results looks good to move forward with a PCA analysis. 
 
 # 3. Compute PCA (from http://www.sthda.com/english/articles/31-principal-component-methods-in-r-practical-guide/118-principal-component-analysis-in-r-prcomp-vs-princomp/)
-res.pca <- prcomp(data.PCA, scale = TRUE)
+res.pca <- prcomp(data.PCA, scale = TRUE) # scale can both center and scale
 
 # 4. Plot biplot (UPDATE COLORS & better format figure)
 var_explained <- res.pca$sdev ^ 2 / sum(res.pca$sdev ^ 2)
@@ -158,3 +158,51 @@ p1
 
 ggsave("figures/SO4_bp.png", p1,units = "cm",height = 5, width = 6, dpi = 320)
 
+# Environmental variables
+
+# Load 30 min data
+load(here("output/30min_data.Rda"))
+
+# DEFINE ANNUAL PERIODS (June-June of each year)
+# Young
+year1_s_Young <- which(data$datetime == as.POSIXct("2021-06-01 00:30:00",tz = 'UTC') & data$site == 'Young')
+year1_e_Young <- which(data$datetime == as.POSIXct("2022-06-01 00:00:00",tz = 'UTC') & data$site == 'Young')
+
+year2_s_Young <- which(data$datetime == as.POSIXct("2022-06-01 00:30:00",tz = 'UTC') & data$site == 'Young')
+year2_e_Young <- which(data$datetime == as.POSIXct("2023-06-01 00:00:00",tz = 'UTC') & data$site == 'Young')
+
+# Hogg
+year1_s_Hogg <- which(data$datetime == as.POSIXct("2021-06-01 00:30:00",tz = 'UTC') & data$site == 'Hogg')
+year1_e_Hogg <- which(data$datetime == as.POSIXct("2022-06-01 00:00:00",tz = 'UTC') & data$site == 'Hogg')
+
+year2_s_Hogg <- which(data$datetime == as.POSIXct("2022-06-01 00:30:00",tz = 'UTC') & data$site == 'Hogg')
+year2_e_Hogg <- which(data$datetime == as.POSIXct("2023-06-01 00:00:00",tz = 'UTC') & data$site == 'Hogg')
+
+data$year_ann <- NA
+data$year_ann[year1_s_Young:year1_e_Young] <- 'Year1'
+data$year_ann[year2_s_Young:year2_e_Young] <- 'Year2'
+data$year_ann[year1_s_Hogg:year1_e_Hogg] <- 'Year1'
+data$year_ann[year2_s_Hogg:year2_e_Hogg] <- 'Year2'
+
+data.annual.met <- data[c(1:nrow(data)-1), ] %>%
+  group_by(site,year_ann) %>%
+  dplyr::summarize(TA = mean(TA_1_1_1,na.rm = TRUE),
+                   VPD = mean(VPD_1_1_1,na.rm = TRUE),
+                   PPFD_IN = mean(PPFD_IN_1_1_1,na.rm = TRUE),
+                   P = sum(P_1_1_1,na.rm = TRUE))
+
+# RUN STATS ON VARIABLES (ALSO TEST AT DAILY TIMESTEP)
+# For sites with variables for both years
+data.TA <- na.omit(data[,c('site','year_ann','TA_1_1_1')])
+data.TA$site <- as.factor(data$site)
+data.TA$year <- as.factor(data$year_ann)
+
+p1 <- ggboxplot(
+  data.TA, x = 'site', y = 'TA_1_1_1', fill = 'year_ann',
+  palette = colors_sites[c(9,2)],
+  lwd=0.2,
+  outlier.size=0.3
+)+theme(text = element_text(size = 6))
+p1                    
+
+# THINK MORE ABOUT WHAT IS A 'YEAR'!

@@ -17,7 +17,7 @@ p <- sapply(list.files(pattern="read_database_generalized.R", path="/Users/sara/
 
 # Hogg site
 db_path <- '/Users/sara/Library/CloudStorage/OneDrive-UBC/UBC/Database'
-data.Hogg <- read_data_generalized(db_path,c(2021:2022),"HOGG","Clean/ThirdStage",
+data.Hogg <- read_data_generalized(db_path,c(2021:2023),"HOGG","Clean/ThirdStage",
                                    c("NEE","NEE_PI_F_MDS","FCH4","FCH4_PI_F_MDS","FCH4_PI_F_RF","H","H_PI_F_MDS","LE","LE_PI_F_MDS",
                                      "GPP_PI_F_DT","GPP_PI_F_NT","Reco_PI_F_DT","Reco_PI_F_NT","NETRAD_1_1_1","P_1_1_1","PA_1_1_1",
                                      "RH_1_1_1","SW_IN_1_1_1","PPFD_IN_1_1_1","TA_1_1_1","TS_1","TS_2","TS_3","USTAR","VPD_1_1_1","WD_1_1_1","WS_1_1_1"),"clean_tv",0)
@@ -60,7 +60,8 @@ data.Hogg$year <- year(data.Hogg$datetime)
 yrs <- unique(data.Hogg$year)
 yrs <- yrs[which(!is.na(unique(data.Hogg$year)))]
 
-for (i in 1:(length(yrs)-1)) { #n-1 years since the last timestep is the first day of the following year
+# UPDATE to -1 once we get 2023 data!
+for (i in 1:(length(yrs)-2)) { #n-1 years since the last timestep is the first day of the following year
   NonNAindex <- which(!is.na(data.Hogg$WTD) & data.Hogg$year == yrs[i])
   firstNonNA <- min(NonNAindex)
   lastNonNA <- max(NonNAindex)
@@ -69,7 +70,7 @@ for (i in 1:(length(yrs)-1)) { #n-1 years since the last timestep is the first d
 }
 
 # Linearly interpolate between WQ measurements
-for (i in 1:(length(yrs)-1)) {
+for (i in 1:(length(yrs)-2)) {
   
   # First SO4 
   NonNAindex <- which(!is.na(data.Hogg$SO4) & data.Hogg$year == yrs[i])
@@ -100,7 +101,7 @@ for (i in 1:(length(yrs)-1)) {
 
 # Young site
 db_path <- '/Users/sara/Library/CloudStorage/OneDrive-UBC/UBC/Database'
-data.Young <- read_data_generalized(db_path,c(2021:2022),"YOUNG","Clean/ThirdStage",
+data.Young <- read_data_generalized(db_path,c(2021:2023),"YOUNG","Clean/ThirdStage",
                                     c("NEE","NEE_PI_F_MDS","FCH4","FCH4_PI_F_MDS","FCH4_PI_F_RF","H","H_PI_F_MDS","LE","LE_PI_F_MDS",
                                       "GPP_PI_F_DT","GPP_PI_F_NT","Reco_PI_F_DT","Reco_PI_F_NT","NETRAD_1_1_1","P_1_1_1","PA_1_1_1",
                                       "RH_1_1_1","SW_IN_1_1_1","PPFD_IN_1_1_1","TA_1_1_1","TS_1","TS_2","TS_3","USTAR","VPD_1_1_1","WD_1_1_1","WS_1_1_1"),"clean_tv",0)
@@ -143,7 +144,7 @@ data.Young$year <- year(data.Young$datetime)
 yrs <- unique(data.Young$year)
 yrs <- yrs[which(!is.na(unique(data.Young$year)))]
 
-for (i in 1:(length(yrs)-1)) {
+for (i in 1:(length(yrs)-2)) {
   NonNAindex <- which(!is.na(data.Young$WTD) & data.Young$year == yrs[i])
   firstNonNA <- min(NonNAindex)
   lastNonNA <- max(NonNAindex)
@@ -152,7 +153,7 @@ for (i in 1:(length(yrs)-1)) {
 }
 
 # Linearly interpolate between WQ measurements
-for (i in 1:(length(yrs)-1)) {
+for (i in 1:(length(yrs)-2)) {
   
   # First SO4 
   NonNAindex <- which(!is.na(data.Young$SO4) & data.Young$year == yrs[i])
@@ -225,8 +226,10 @@ data.daily <- data %>%
                    WTD = mean(WTD, na.rm = TRUE),
                    TS = mean(TS_2, na.rm = TRUE),
                    TA = mean(TA_1_1_1, na.rm = TRUE),
+                   VPD = mean(VPD_1_1_1, na.rm = TRUE),
                    SW_IN = mean(SW_IN_1_1_1, na.rm = TRUE)*conv_energy,
                    PPFD_IN = mean(PPFD_IN_1_1_1, na.rm = TRUE),
+                   P = sum(P_1_1_1, na.rm = TRUE),
                    LE = mean(LE_PI_F_MDS, na.rm = TRUE)*conv_energy,
                    H = mean(LE_PI_F_MDS, na.rm = TRUE)*conv_energy,
                    pH = mean(pH,na.rm = TRUE),

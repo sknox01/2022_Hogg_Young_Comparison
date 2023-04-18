@@ -621,3 +621,25 @@ data.cummulative.Young <- data.daily[c(ind_s_Young:ind_e_Young), ] %>%
 # CHECK CALCULATION BASED ON MARION'S WORK (i.e, may need to account for C lost as CH4)
 data.cummulative.Young$GHG <- data.cummulative.Young$FC_gC*44.01/12.011+data.cummulative.Young$FCH4_gC*16.04/12.011*45
 data.cummulative.Young
+
+# Conditional Inference Trees analysis
+
+# specify libraries needed
+library(party)
+library(plyr)
+library(readr)
+
+# Load data
+load("output/daily_data.Rda")
+
+# Add water quality data
+data.daily$SO4 <- NA
+data.daily$SO4[which(data.daily$site == 'Young')] <- 305
+data.daily$SO4[which(data.daily$site == 'Hogg')] <- 1114
+
+data.daily$TP <- NA
+data.daily$TP[which(data.daily$site == 'Young')] <- 494
+data.daily$TP[which(data.daily$site == 'Hogg')] <- 164
+
+tree<-ctree(FCH4_gC~GPP_f_gC+WTH+TS+SO4+TP, data=data.daily)
+plot(tree)
