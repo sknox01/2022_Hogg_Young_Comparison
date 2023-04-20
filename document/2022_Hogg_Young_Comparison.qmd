@@ -77,9 +77,9 @@ As certain water quality parameters were highly correlated (Figure [-@fig-PCA]),
 
 # Results
 
-## Weather and hydrological conditions
+## Meteorology and hydrological conditions
 
-### Water quality
+### Water quality (maybe add WTD here)
 
 Significant differences were observed in water quality parameters across sites (Table [-@tbl-WQ], Figure [-@fig-PCA]). Averaged across years, Hogg had significantly higher $SO_{4}^{2-}$, specific conductivity, dissolved organic carbon (DOC), total dissolved nitrogen (TDN), and Specific ultraviolet absorbance at 280 nm (ABS 280) than Young. Conversely, dissolved reactive phosphorus (DRP), total dissolved phosphorus (TDP) concentrations than Young, total phosphorus (TP) was significantly lower at Hogg than Young. No significant differences in pH, NO3 or NO2, or NH4 were observed between sites.
 
@@ -96,9 +96,28 @@ Figure [-@fig-SO4].
 
 ![SO4.](../figures/SO4_bp.png){#fig-SO4}
 
+
 Figure [-@fig-PCA].
 
 ![PCA.](../figures/PCA_WQ.png){#fig-PCA}
+
+### Meteorological conditions
+
+ADD PLOT OF MET DATA HERE.
+
+Although water quality differed significantly between sites, given the proximity of the sites, Hogg and Young experienced similar meteorological conditions; there were no significant differences in mean annual air temperature (TA), vapor pressure deficit (VPD), incoming photosynthetically active radiation (PPFD_IN), and precipitation between sites. However, water levels at Young were significantly higher than at Hogg (Table [-@tbl-MET]). 
+
+SUMMARIZE for GS (JJA - or period corresponding to WQ measurements)
+
+```{r, echo=FALSE, warning = FALSE, message = FALSE}
+#| label: tbl-MET
+#| tbl-cap: Differences in water quality parameters across sites.
+# Make sure there are no empty lines in the code of the cross referencing won't work!
+load(here("output/daily_Met_mean.Rda"))
+MET <- data.annual.met.2022
+knitr::kable(MET)
+```
+
 
 Figure [-@fig-NEE].
 

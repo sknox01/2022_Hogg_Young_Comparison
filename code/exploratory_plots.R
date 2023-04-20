@@ -318,7 +318,7 @@ data.daily %>%
   group_by(site, year) %>%
   get_summary_stats(SO4, type = "mean_sd")
 
-# Test for normality - Normally distributed as p > 0.05
+# Test for normality - Normally distributed if p > 0.05
 # (https://www.datanovia.com/en/lessons/repeated-measures-anova-in-r/)
 data.daily %>%
   group_by(site, year) %>%
@@ -566,34 +566,42 @@ ggplot(data.daily.na.omit, aes(x=predict(lm), y= data.daily.na.omit$FCH4_gC)) +
 # Plot daily CO2 fluxes by site
 colors_sites <- c("#999999", "#E69F00", "#56B4E9", "#009E73",
                   "#F0E442", "#0072B2", "#D55E00", "#CC79A7") # Color blind palette from: https://www.datanovia.com/en/blog/ggplot-colors-best-tricks-you-will-love/
-
+ind <- which(data.daily$year=='2021'|data.daily$year=='2022')
 p <- ggplot() +
-  geom_line(data = data.daily, aes(x = as.Date(datetime), y = FC_gC, color = factor(site)),linewidth=0.3) + scale_x_date(date_labels = "%b %y") +
+  geom_line(data = data.daily[ind,], aes(x = as.Date(datetime), y = FC_gC, color = factor(site)),linewidth=0.3) + 
+  scale_x_date(date_labels = "%b %y") +
   xlab('') + ylab(expression(NEE~(g~C~m^-2~d^-1))) +
   scale_color_manual(values = c("Hogg"=colors_sites[6],
                                 "Young"=colors_sites[2]),
                      name="Site") +
   theme_bw() +
   ylim(-8, 8) + theme(#legend.position = c(0.1, 0.85),
-    text = element_text(size = 10),
-    legend.title = element_text(size=6),
-    legend.text = element_text(size=6),
+    text = element_text(size = 16),
+    legend.title = element_text(size=12),
+    legend.text = element_text(size=12),
     legend.key.height=unit(0.5,"line")) 
 p  
 
-ggsave("figures/NEE.png", p,units = "cm", height = 5, width = 9, dpi = 320)
+ggsave("figures/NEE.png", p,units = "cm", height = 10, width = 18, dpi = 320)
 
 # Plot daily FCH4 fluxes by site
 p <- ggplot() +
-  geom_point(data = data.daily, aes(x = as.Date(datetime), y = FCH4_gC*1000, color = factor(site)), size = 1) + scale_x_date(date_labels = "%b %y") + 
+  geom_line(data = data.daily[ind,], aes(x = as.Date(datetime), y = FCH4_gC*1000, color = factor(site)),linewidth=0.3) + 
+  scale_x_date(date_labels = "%b %y") + 
   xlab('') + ylab(expression(FCH4~(mg~C~m^-2~d^-1))) +
-  scale_color_manual(values = c("MBPPW1"=colors_sites[4],
-                                "MBPPW2"=colors_sites[3]),
-                     name="") +
-  ylim(-10, 150) + theme(legend.position="bottom",text = element_text(size = 10))
+  scale_color_manual(values = c("Hogg"=colors_sites[6],
+                                "Young"=colors_sites[2]),
+                     name="Site") +
+  theme_bw() +
+  ylim(-8, 8) + theme(#legend.position = c(0.1, 0.85),
+    text = element_text(size = 16),
+    legend.title = element_text(size=12),
+    legend.text = element_text(size=12),
+    legend.key.height=unit(0.5,"line")) +
+  ylim(-10, 150) #+ theme(legend.position="bottom",text = element_text(size = 16))
 p  
 
-ggsave("figures/FCH4.pdf", p,units = "cm",height = 5, width = 6, dpi = 320)
+ggsave("figures/FCH4.png", p,units = "cm", height = 10, width = 18, dpi = 320)
 
 # cumulative fluxes (gC m-2 yr-1)
 # For the first year (June 1, 2021 to May 31, 2022)
@@ -643,3 +651,25 @@ data.daily$TP[which(data.daily$site == 'Hogg')] <- 164
 
 tree<-ctree(FCH4_gC~GPP_f_gC+WTH+TS+SO4+TP, data=data.daily)
 plot(tree)
+
+# DEFINE ANNUAL PERIODS (June-June of each year)
+# Young
+year1_s_Young <- which(data$datetime == as.POSIXct("2021-06-01 00:30:00",tz = 'UTC') & data$site == 'Young')
+year1_e_Young <- which(data$datetime == as.POSIXct("2022-06-01 00:00:00",tz = 'UTC') & data$site == 'Young')
+
+year2_s_Young <- which(data$datetime == as.POSIXct("2022-06-01 00:30:00",tz = 'UTC') & data$site == 'Young')
+year2_e_Young <- which(data$datetime == as.POSIXct("2023-06-01 00:00:00",tz = 'UTC') & data$site == 'Young')
+
+# Hogg
+year1_s_Hogg <- which(data$datetime == as.POSIXct("2021-06-01 00:30:00",tz = 'UTC') & data$site == 'Hogg')
+year1_e_Hogg <- which(data$datetime == as.POSIXct("2022-06-01 00:00:00",tz = 'UTC') & data$site == 'Hogg')
+
+year2_s_Hogg <- which(data$datetime == as.POSIXct("2022-06-01 00:30:00",tz = 'UTC') & data$site == 'Hogg')
+year2_e_Hogg <- which(data$datetime == as.POSIXct("2023-06-01 00:00:00",tz = 'UTC') & data$site == 'Hogg')
+
+data$year_ann <- NA
+data$year_ann[year1_s_Young:year1_e_Young] <- 'Year1'
+data$year_ann[year2_s_Young:year2_e_Young] <- 'Year2'
+data$year_ann[year1_s_Hogg:year1_e_Hogg] <- 'Year1'
+data$year_ann[year2_s_Hogg:year2_e_Hogg] <- 'Year2'
+

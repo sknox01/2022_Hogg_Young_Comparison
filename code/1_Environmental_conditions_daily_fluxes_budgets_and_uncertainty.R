@@ -20,9 +20,12 @@ library(ggpubr)
 library(cowplot)
 library(emmeans)
 library(multcomp)
+library(kableExtra)
 library(factoextra)
+library(rstatix)
 
-# Reconcile with exploratory_plots & clean up exploratory_plots 
+# Reconcile with exploratory_plots & clean up exploratory_plots. 
+# Make sure to include all assumptions here so that it's easy to follow!
 
 # Load data
 load(here("output/daily_data.Rda"))
@@ -158,51 +161,66 @@ p1
 
 ggsave("figures/SO4_bp.png", p1,units = "cm",height = 5, width = 6, dpi = 320)
 
-# Environmental variables
+# Environmental variables on daily data
 
-# Load 30 min data
-load(here("output/30min_data.Rda"))
+# Restrict data to 2022 for now. Want a full year of comparisons between sites. 
+# Can also consider just Growing season differences!
+data.daily.2022 <- data.daily[which(data.daily$year == 2022), ]
+data.annual.met.2022 <- data.daily.2022 %>% # Compare results in using 30 min data. Why aren't they exactly the same....
+  group_by(site,year) %>%
+  dplyr::summarize(TA = mean(TA,na.rm = TRUE),
+                   VPD = mean(VPD,na.rm = TRUE),
+                   PPFD_IN = mean(PPFD_IN,na.rm = TRUE), # Update units later
+                   P = sum(P,na.rm = TRUE),
+                   WTD =  mean(WTD,na.rm = TRUE)) # Make sure measurement length is the same for both datasets
 
-# DEFINE ANNUAL PERIODS (June-June of each year)
-# Young
-year1_s_Young <- which(data$datetime == as.POSIXct("2021-06-01 00:30:00",tz = 'UTC') & data$site == 'Young')
-year1_e_Young <- which(data$datetime == as.POSIXct("2022-06-01 00:00:00",tz = 'UTC') & data$site == 'Young')
+save(data.annual.met.2022,file="output/daily_Met_mean.Rda")
 
-year2_s_Young <- which(data$datetime == as.POSIXct("2022-06-01 00:30:00",tz = 'UTC') & data$site == 'Young')
-year2_e_Young <- which(data$datetime == as.POSIXct("2023-06-01 00:00:00",tz = 'UTC') & data$site == 'Young')
+# Check assumptions of normality for t-test - Normally distributed if p > 0.05
+data.daily.2022 %>% 
+  group_by(site,year) %>%
+  shapiro_test(TA,VPD,PPFD_IN,P,WTD) # Not normally distributed
 
-# Hogg
-year1_s_Hogg <- which(data$datetime == as.POSIXct("2021-06-01 00:30:00",tz = 'UTC') & data$site == 'Hogg')
-year1_e_Hogg <- which(data$datetime == as.POSIXct("2022-06-01 00:00:00",tz = 'UTC') & data$site == 'Hogg')
+# but check outliers further (update manually to inspect each variable)
+ggqqplot(data.daily.2022, "TA", ggtheme = theme_bw()) +
+  facet_grid(site ~ year, labeller = "label_both")
 
-year2_s_Hogg <- which(data$datetime == as.POSIXct("2022-06-01 00:30:00",tz = 'UTC') & data$site == 'Hogg')
-year2_e_Hogg <- which(data$datetime == as.POSIXct("2023-06-01 00:00:00",tz = 'UTC') & data$site == 'Hogg')
+# Compare differences between years
+# Specify variables (only one year for each of these at the moment)
+vars <- c('TA','VPD','PPFD_IN','P','WTD')
+nvars <- length(vars)
 
-data$year_ann <- NA
-data$year_ann[year1_s_Young:year1_e_Young] <- 'Year1'
-data$year_ann[year2_s_Young:year2_e_Young] <- 'Year2'
-data$year_ann[year1_s_Hogg:year1_e_Hogg] <- 'Year1'
-data$year_ann[year2_s_Hogg:year2_e_Hogg] <- 'Year2'
+# Create empty plot
+plots_bp <- plot.new()
 
-data.annual.met <- data[c(1:nrow(data)-1), ] %>%
-  group_by(site,year_ann) %>%
-  dplyr::summarize(TA = mean(TA_1_1_1,na.rm = TRUE),
-                   VPD = mean(VPD_1_1_1,na.rm = TRUE),
-                   PPFD_IN = mean(PPFD_IN_1_1_1,na.rm = TRUE),
-                   P = sum(P_1_1_1,na.rm = TRUE))
+# Loop through each variables - CHECK NA.OMIT once we have all the data
+for (i in 1:nvars){
+  
+  var <- vars[[i]]
+  
+  p <- ggplot(data.daily.2022, aes(as.factor(.data[["site"]]), .data[[var]])) + 
+    geom_boxplot(lwd=0.2,outlier.size=0.3) + xlab('') +
+    geom_signif(comparisons = list(c("Hogg", "Young")), na.rm = TRUE, test = "wilcox.test",
+                map_signif_level=TRUE, tip_length = 0,textsize=1.5,size = 0.2, 
+                y_position = max(data.daily.2022[[var]],na.rm = T)-0.1*(max(data.daily.2022[[var]],na.rm = T)-min(data.daily.2022[[var]],na.rm = T))) + 
+    theme(text = element_text(size = 6))
+  
+  plots_bp[[i]] <- p
+}
 
-# RUN STATS ON VARIABLES (ALSO TEST AT DAILY TIMESTEP)
-# For sites with variables for both years
-data.TA <- na.omit(data[,c('site','year_ann','TA_1_1_1')])
-data.TA$site <- as.factor(data$site)
-data.TA$year <- as.factor(data$year_ann)
+p <- ggarrange(plotlist=plots_bp)
 
-p1 <- ggboxplot(
-  data.TA, x = 'site', y = 'TA_1_1_1', fill = 'year_ann',
-  palette = colors_sites[c(9,2)],
-  lwd=0.2,
-  outlier.size=0.3
-)+theme(text = element_text(size = 6))
-p1                    
+# Check if it should be a t-test or Wilcoxon test....Not normally distributed so using Wilcoxon test 
+# The results of these experiments indicate that Student’s t-test should definitely be avoided for sample sizes smaller than 20 (https://www.datascienceblog.net/post/statistical_test/parametric_sample_size/)
+# See also https://www.datascienceblog.net/post/statistical_test/signed_wilcox_rank_test/
 
-# THINK MORE ABOUT WHAT IS A 'YEAR'!
+# Confirm statistics! or should it be t-test? 
+W_test <- list()
+for (i in 1:nvars){
+  
+  var <- vars[[i]]
+  W_test[[i]] <- wilcox.test(na.omit(data.daily)[[var]]~na.omit(data.daily)[["site"]]) # No significant differences between sites
+}
+
+ggsave("figures/Met_bp.png", p,units = "cm",height = 8, width = 12, dpi = 320)
+
