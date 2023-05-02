@@ -43,14 +43,14 @@ file <- 'Hogg_WQ_2021_2022.csv'
 data.Hogg.WQ_all <- read.csv(here("data",file), header = T)
 vars.Hogg.WQ_all <- colnames(data.Hogg.WQ_all)
 data.Hogg.WQ_all$datetime <- as.POSIXct(data.Hogg.WQ_all$Date, tz = "UTC")
-data.Hogg.WQ <- data.Hogg.WQ_all[, c(seq(5,15),length(vars.Hogg.WQ_all)+1)] # select only variables of interest
-colnames(data.Hogg.WQ) <- c("pH","Specific_cond","DOC","TDN","NO3_NO2_N","NH4_N","DRP","TDP","TP","ABS_280nm","SO4","datetime")
+data.Hogg.WQ <- data.Hogg.WQ_all[, c(seq(5,16),length(vars.Hogg.WQ_all)+1)] # select only variables of interest
+colnames(data.Hogg.WQ) <- c("pH","Specific_cond","DOC","TDN","NO3_NO2_N","NH4_N","DRP","TDP","TP","ABS_280nm","SO4","SO4_pred","datetime")
 
 data.Hogg <- data.Hogg %>% 
   left_join(data.Hogg.WQ,by = 'datetime')
 
 # Create new data frame and rename columns for interpolated variables
-colnames(data.Hogg.WQ) <- c("pH_interp","Specific_cond_interp","DOC_interp","TDN_interp","NO3_NO2_N_interp","NH4_N_interp","DRP_interp","TDP_interp","TP_interp","ABS_280nm_interp","SO4_interp","datetime")
+colnames(data.Hogg.WQ) <- c("pH_interp","Specific_cond_interp","DOC_interp","TDN_interp","NO3_NO2_N_interp","NH4_N_interp","DRP_interp","TDP_interp","TP_interp","ABS_280nm_interp","SO4_interp","SO4_pred_interp","datetime")
 data.Hogg <- data.Hogg %>% 
   left_join(data.Hogg.WQ,by = 'datetime')
 
@@ -70,32 +70,18 @@ for (i in 1:(length(yrs)-2)) { #n-1 years since the last timestep is the first d
 }
 
 # Linearly interpolate between WQ measurements
-for (i in 1:(length(yrs)-2)) {
-  
-  # First SO4 
-  NonNAindex <- which(!is.na(data.Hogg$SO4) & data.Hogg$year == yrs[i])
-  firstNonNA <- min(NonNAindex)
-  lastNonNA <- max(NonNAindex)
-  
-  data.Hogg$SO4_interp[firstNonNA:lastNonNA] <- na.approx(data.Hogg$SO4_interp[firstNonNA:lastNonNA])
-  
-  # Next all other variables - update once we have the latest WQ data
-  NonNAindex <- which(!is.na(data.Hogg$Specific_cond) & data.Hogg$year == yrs[i])
-  
-  if (length(NonNAindex) >0) {
-    firstNonNA <- min(NonNAindex)
-    lastNonNA <- max(NonNAindex)
+vars_interp <- c("pH_interp","Specific_cond_interp","DOC_interp","TDN_interp","NO3_NO2_N_interp","NH4_N_interp","DRP_interp","TDP_interp","TP_interp","ABS_280nm_interp","SO4_interp","SO4_pred_interp")
+
+for (i in 1:(length(yrs)-2)) { # UPDATE to -1 once we get 2023 data!
+  for (j in 1:length(vars_interp)) {
+    df <- data.Hogg[[vars_interp[j]]]
+    NonNAindex <- which(!is.na(df) & data.Hogg$year == yrs[i])
     
-    data.Hogg$pH_interp[firstNonNA:lastNonNA] <- na.approx(data.Hogg$pH_interp[firstNonNA:lastNonNA])
-    data.Hogg$Specific_cond_interp[firstNonNA:lastNonNA] <- na.approx(data.Hogg$Specific_cond_interp[firstNonNA:lastNonNA])
-    data.Hogg$DOC_interp[firstNonNA:lastNonNA] <- na.approx(data.Hogg$DOC_interp[firstNonNA:lastNonNA])
-    data.Hogg$TDN_interp[firstNonNA:lastNonNA] <- na.approx(data.Hogg$TDN_interp[firstNonNA:lastNonNA])
-    data.Hogg$NO3_NO2_N_interp[firstNonNA:lastNonNA] <- na.approx(data.Hogg$NO3_NO2_N_interp[firstNonNA:lastNonNA])
-    data.Hogg$NH4_N_interp[firstNonNA:lastNonNA] <- na.approx(data.Hogg$NH4_N_interp[firstNonNA:lastNonNA])
-    data.Hogg$DRP_interp[firstNonNA:lastNonNA] <- na.approx(data.Hogg$DRP_interp[firstNonNA:lastNonNA])
-    data.Hogg$TDP_interp[firstNonNA:lastNonNA] <- na.approx(data.Hogg$TDP_interp[firstNonNA:lastNonNA])
-    data.Hogg$TP_interp[firstNonNA:lastNonNA] <- na.approx(data.Hogg$TP_interp[firstNonNA:lastNonNA])
-    data.Hogg$ABS_280nm_interp[firstNonNA:lastNonNA] <- na.approx(data.Hogg$ABS_280nm_interp[firstNonNA:lastNonNA])
+    if (length(NonNAindex)>0) {
+      firstNonNA <- min(NonNAindex)
+      lastNonNA <- max(NonNAindex)
+      data.Hogg[[vars_interp[j]]][firstNonNA:lastNonNA] <- na.approx(data.Hogg[[vars_interp[j]]][firstNonNA:lastNonNA])
+    }
   }
 }
 
@@ -127,14 +113,14 @@ file <- 'Young_WQ_2021_2022.csv'
 data.Young.WQ_all <- read.csv(here("data",file), header = T)
 vars.Young.WQ_all <- colnames(data.Young.WQ_all)
 data.Young.WQ_all$datetime <- as.POSIXct(data.Young.WQ_all$Date, tz = "UTC")
-data.Young.WQ <- data.Young.WQ_all[, c(seq(5,15),length(vars.Young.WQ_all)+1)] # select only variables of interest
-colnames(data.Young.WQ) <- c("pH","Specific_cond","DOC","TDN","NO3_NO2_N","NH4_N","DRP","TDP","TP","ABS_280nm","SO4","datetime")
+data.Young.WQ <- data.Young.WQ_all[, c(seq(5,16),length(vars.Young.WQ_all)+1)] # select only variables of interest
+colnames(data.Young.WQ) <- c("pH","Specific_cond","DOC","TDN","NO3_NO2_N","NH4_N","DRP","TDP","TP","ABS_280nm","SO4","SO4_pred","datetime")
 
 data.Young <- data.Young %>% 
   left_join(data.Young.WQ,by = 'datetime')
 
 # Create new data frame and rename columns for interpolated variables
-colnames(data.Young.WQ) <- c("pH_interp","Specific_cond_interp","DOC_interp","TDN_interp","NO3_NO2_N_interp","NH4_N_interp","DRP_interp","TDP_interp","TP_interp","ABS_280nm_interp","SO4_interp","datetime")
+colnames(data.Young.WQ) <- c("pH_interp","Specific_cond_interp","DOC_interp","TDN_interp","NO3_NO2_N_interp","NH4_N_interp","DRP_interp","TDP_interp","TP_interp","ABS_280nm_interp","SO4_interp","SO4_pred_interp","datetime")
 data.Young <- data.Young %>% 
   left_join(data.Young.WQ,by = 'datetime')
 
@@ -152,33 +138,16 @@ for (i in 1:(length(yrs)-2)) {
   data.Young$WTD[firstNonNA:lastNonNA] <- na.approx(data.Young$WTD[firstNonNA:lastNonNA])
 }
 
-# Linearly interpolate between WQ measurements
-for (i in 1:(length(yrs)-2)) {
-  
-  # First SO4 
-  NonNAindex <- which(!is.na(data.Young$SO4) & data.Young$year == yrs[i])
-  firstNonNA <- min(NonNAindex)
-  lastNonNA <- max(NonNAindex)
-  
-  data.Young$SO4_interp[firstNonNA:lastNonNA] <- na.approx(data.Young$SO4_interp[firstNonNA:lastNonNA])
-  
-  # Next all other variables - update once we have the latest WQ data
-  NonNAindex <- which(!is.na(data.Young$Specific_cond) & data.Young$year == yrs[i])
-  
-  if (length(NonNAindex) >0) {
-    firstNonNA <- min(NonNAindex)
-    lastNonNA <- max(NonNAindex)
+for (i in 1:(length(yrs)-2)) { # UPDATE to -1 once we get 2023 data!
+  for (j in 1:length(vars_interp)) {
+    df <- data.Young[[vars_interp[j]]]
+    NonNAindex <- which(!is.na(df) & data.Young$year == yrs[i])
     
-    data.Young$pH_interp[firstNonNA:lastNonNA] <- na.approx(data.Young$pH_interp[firstNonNA:lastNonNA])
-    data.Young$Specific_cond_interp[firstNonNA:lastNonNA] <- na.approx(data.Young$Specific_cond_interp[firstNonNA:lastNonNA])
-    data.Young$DOC_interp[firstNonNA:lastNonNA] <- na.approx(data.Young$DOC_interp[firstNonNA:lastNonNA])
-    data.Young$TDN_interp[firstNonNA:lastNonNA] <- na.approx(data.Young$TDN_interp[firstNonNA:lastNonNA])
-    data.Young$NO3_NO2_N_interp[firstNonNA:lastNonNA] <- na.approx(data.Young$NO3_NO2_N_interp[firstNonNA:lastNonNA])
-    data.Young$NH4_N_interp[firstNonNA:lastNonNA] <- na.approx(data.Young$NH4_N_interp[firstNonNA:lastNonNA])
-    data.Young$DRP_interp[firstNonNA:lastNonNA] <- na.approx(data.Young$DRP_interp[firstNonNA:lastNonNA])
-    data.Young$TDP_interp[firstNonNA:lastNonNA] <- na.approx(data.Young$TDP_interp[firstNonNA:lastNonNA])
-    data.Young$TP_interp[firstNonNA:lastNonNA] <- na.approx(data.Young$TP_interp[firstNonNA:lastNonNA])
-    data.Young$ABS_280nm_interp[firstNonNA:lastNonNA] <- na.approx(data.Young$ABS_280nm_interp[firstNonNA:lastNonNA])
+    if (length(NonNAindex)>0) {
+      firstNonNA <- min(NonNAindex)
+      lastNonNA <- max(NonNAindex)
+      data.Young[[vars_interp[j]]][firstNonNA:lastNonNA] <- na.approx(data.Young[[vars_interp[j]]][firstNonNA:lastNonNA])
+    }
   }
 }
 
@@ -242,6 +211,8 @@ data.daily <- data %>%
                    TDN_interp = mean(TDN_interp,na.rm = TRUE), 
                    SO4 = mean(SO4,na.rm = TRUE),
                    SO4_interp = mean(SO4_interp,na.rm = TRUE), 
+                   SO4_pred = mean(SO4_pred,na.rm = TRUE),
+                   SO4_pred_interp = mean(SO4_pred_interp,na.rm = TRUE), 
                    NO3_NO2_N = mean(NO3_NO2_N,na.rm = TRUE),
                    NO3_NO2_N_interp = mean(NO3_NO2_N_interp,na.rm = TRUE), 
                    NH4_N = mean(NH4_N,na.rm = TRUE),

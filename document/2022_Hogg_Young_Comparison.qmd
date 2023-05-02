@@ -63,7 +63,10 @@ MBPPW2, located at 50.3705˚N, -100.5339˚W, is an isolated grassland marsh abou
 
 ## Supporting measurements
 
-### Water quality measurements
+### Water sampling and analysis
+
+Water samples were collected from three different open-water areas within each wetland and then composited into one sample for each wetland site. Samples were collected 10-20 cm below the water surface and care was taken not to sample any sediment or plant material suspended as a result of wading into the sites. The composite sample was split into three fractions that were stored and shipped in coolers. One fraction was sent to ALS laboratories in Winnipeg and analyzed for SO4 using ion chromatography (EPA 300.1 mod) and alkalinity using standard titration procedures (APHA 2320B). The remaining two fractions, one field filtered upon collection using glass fiber filters (GF/C) for dissolved nutrient analysis, and one unfiltered fraction for total nutrient analysis were delivered to the Agriculture and Agri-Food Canada’s Brandon Research and Development Centre in Manitoba, where they were frozen and stored in a cooler until analyzed. A flow analyzer was used to measure NH4+ and NO3- (as NO3- + NO2-) concentrations colorimetically. Total dissolved N and DOC concentrations were determined through the combustion method using a Shimadzu TOC-VCSn analyzer. Total P and TDP concentrations were determined through sulfuric acid/persulfate digestions and colorimetry using the ascorbic acid method. Additionally, water temperature, specific conductivity, dissolved oxygen, pH, and salinity were measured in-situ using handheld multi-probes.
+
 ABS 280 - does higher mean more recalcitrant DOC?
 
 ## Statistical methods

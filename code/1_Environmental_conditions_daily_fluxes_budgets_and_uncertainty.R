@@ -85,17 +85,17 @@ var_explained <- res.pca$sdev ^ 2 / sum(res.pca$sdev ^ 2)
 groups <- as.factor(data.PCA.all$site)
 
 p <- fviz_pca_biplot(res.pca, repel = TRUE,
-                col.var = "grey33", # Variables color
-                #pointsize = data.PCA.all$FCH4_gC*1000,
-                pointshape = 21,
-                fill.ind = groups,
-                palette = colors_sites[c(9,2)],
-                label = "var",
-                addEllipses = F,
-                legend.title = list(fill = "Site", size = "FCH4 (mgC m-2 d-1)"),
-                invisible = "quali",
-                labelsize = 2,
-                title = "") + 
+                     col.var = "grey33", # Variables color
+                     #pointsize = data.PCA.all$FCH4_gC*1000,
+                     pointshape = 21,
+                     fill.ind = groups,
+                     palette = colors_sites[c(9,2)],
+                     label = "var",
+                     addEllipses = F,
+                     legend.title = list(fill = "Site", size = "FCH4 (mgC m-2 d-1)"),
+                     invisible = "quali",
+                     labelsize = 2,
+                     title = "") + 
   geom_hline(yintercept=0, color='gray70', size=0.3,linetype="dashed") +
   geom_vline(xintercept=0, color='gray70', size=0.3,linetype="dashed") + 
   theme(text = element_text(size = 8),legend.position="bottom")+
@@ -111,6 +111,33 @@ ggsave("figures/PCA_WQ.png", p,units = "cm",height = 8, width = 6, dpi = 320)
 # Specify variables (only one year for each of these at the moment)
 vars <- c('pH','Specific_cond','DOC','TDN','NO3_NO2_N','NH4_N','DRP','TDP','TP','ABS_280nm')
 nvars <- length(vars)
+
+# Checking distribution of the water quality variables. 
+# 1) qq plots
+plots_qq <- plot.new()
+
+for (i in 1:nvars){
+  
+  var <- vars[[i]]
+  p <- ggqqplot(na.omit(data.daily), var, ggtheme = theme_bw(),title = var) +
+    facet_grid(site ~ year, labeller = "label_both")
+  
+  plots_qq[[i]] <- p
+}
+
+p <- ggarrange(plotlist=plots_qq)
+p
+
+# 2) shapiro test. Normally distributed if p > 0.05. Note that most ARE normally distributed
+df <- na.omit(data.daily[,c("site","year",vars)])%>%
+  group_by(site, year)
+
+df.dist <- list()
+for (i in 1:nvars){
+  st <- df%>%dplyr::rename("var" = vars[i]) %>%shapiro_test(var)
+  st$variable <- c(vars[i],vars[i])
+  df.dist[[i]] <- st
+}
 
 # Create empty plot
 plots_bp <- plot.new()
@@ -132,11 +159,13 @@ for (i in 1:nvars){
 
 p <- ggarrange(plotlist=plots_bp)
 
-# Check if it should be a t-test or Wilcoxon test....Not normally distributed so using Wilcoxon test 
-# The results of these experiments indicate that Student’s t-test should definitely be avoided for sample sizes smaller than 20 (https://www.datascienceblog.net/post/statistical_test/parametric_sample_size/)
+# Check if it should be a t-test or Wilcoxon test
+# The results of these experiments indicate that Student’s t-test should definitely be avoided 
+# for sample sizes smaller than 20 (https://www.datascienceblog.net/post/statistical_test/parametric_sample_size/)
 # See also https://www.datascienceblog.net/post/statistical_test/signed_wilcox_rank_test/
 
-# Confirm statistics! or should it be t-test? 
+# Since we have a small sample size, I went with Wilcoxon test, but since the data are normally distributed could go with a t-test. 
+# ASK CO-AUTHORS
 W_test <- list()
 for (i in 1:nvars){
   
