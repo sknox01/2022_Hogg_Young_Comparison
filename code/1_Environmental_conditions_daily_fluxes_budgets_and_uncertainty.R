@@ -316,14 +316,15 @@ for (i in 1:nvars){
 }
 
 # ------------------------------------------------------------------------------------------------
-# Environmental variables on daily data
+# Environmental variables on daily data - MAKE SURE TO CAPTURE THE SAME PERIOD IN EACH YEAR!
 
 # Plot of time series
 vars <- c("PPFD_IN","TA","VPD","WTD","P")
 nvars <- length(vars)
 plots_ts <- plot.new()
 ylabel <- c(expression(paste("PPFD ", "(\u00B5mol ","m"^"-2", " d"^"-1",")")),'TA (\u00B0C)','VPD (hPa)','WTD (cm)',expression(paste("P ", "(mm", " d"^"-1",")")))
-
+subplot_label <- c("(a)","(b)","(c)","(d)","(e)")
+ypos <- c(600,20,25,700,60)
 # Loop through each variables
 for (i in 1:(nvars)){
   
@@ -334,15 +335,14 @@ for (i in 1:(nvars)){
     theme_classic()+
     scale_color_manual(breaks = c('Hogg','Young'),values=colors_sites[c(2,9)])+
     labs(color='Site')+xlab('')+ylab(ylabel[[i]])+ 
-    theme(text = element_text(size = 7),axis.text = element_text(size = 8),plot.margin = margin(0, 0.2, 0, 0.2, "cm"))  
+    theme(text = element_text(size = 7),axis.text = element_text(size = 8),plot.margin = margin(0, 0.2, 0, 0.2, "cm"))+  
+    annotate(geom="text", x=data.daily[["datetime"]][nrow(data.daily)-10], y=ypos[[i]], label=subplot_label[[i]],size = 3)
   
   plots_ts[[i]] <- p
 }
 
 p1 <- ggarrange(plotlist=plots_ts,ncol = 1,
-                nrow = 5, common.legend = TRUE,labels = c("(a)", "(b)", "(c)",
-                                                          "(d)","(e)"),
-                font.label = list(size = 8),hjust = -2)
+                nrow = 5, common.legend = TRUE,hjust = -3.5)
 p1
 ggsave("figures/Met_ts.png", p1,units = "cm",height = 12, width = 12, dpi = 320)
 
