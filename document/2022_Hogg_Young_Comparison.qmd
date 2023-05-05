@@ -106,7 +106,9 @@ Figure [-@fig-PCA].
 
 ### Meteorological conditions
 
-ADD PLOT OF MET DATA HERE.
+Figure [-@fig-met_ts].
+
+![met_ts.](../figures/Met_ts.png){#fig-met_ts}
 
 Although water quality differed significantly between sites, given the proximity of the sites, Hogg and Young experienced similar meteorological conditions; there were no significant differences in mean annual air temperature (TA), vapor pressure deficit (VPD), incoming photosynthetically active radiation (PPFD_IN), and precipitation between sites. However, water levels at Young were significantly higher than at Hogg (Table [-@tbl-MET]). 
 
@@ -117,7 +119,7 @@ SUMMARIZE for GS (JJA - or period corresponding to WQ measurements)
 #| tbl-cap: Differences in water quality parameters across sites.
 # Make sure there are no empty lines in the code of the cross referencing won't work!
 load(here("output/daily_Met_mean.Rda"))
-MET <- data.annual.met.2022
+MET <- data.annual.met.GS
 knitr::kable(MET)
 ```
 

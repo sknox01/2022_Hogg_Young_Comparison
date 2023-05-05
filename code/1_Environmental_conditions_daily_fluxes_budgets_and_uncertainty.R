@@ -23,6 +23,8 @@ library(multcomp)
 library(kableExtra)
 library(factoextra)
 library(rstatix)
+library(car)
+library(ggplotify)
 
 # Reconcile with exploratory_plots & clean up exploratory_plots. 
 # Make sure to include all assumptions here so that it's easy to follow!
@@ -47,7 +49,9 @@ colors_sites <- c("#999999", "#E69F00", "#56B4E9", "#009E73",
                   "#F0E442", "#0072B2", "#D55E00", "#CC79A7",
                   '#257ABA', '#C9B826') 
 
-# water quality data
+# ------------------------------------------------------------------------------------------------
+# Water Quality Data
+
 # Table summary of WQ data
 vars <- c('pH','SO4','Specific_cond','DOC','TDN','NO3_NO2_N','NH4_N','DRP','TDP','TP','ABS_280nm')
 
@@ -89,7 +93,7 @@ p <- fviz_pca_biplot(res.pca, repel = TRUE,
                      #pointsize = data.PCA.all$FCH4_gC*1000,
                      pointshape = 21,
                      fill.ind = groups,
-                     palette = colors_sites[c(9,2)],
+                     palette = colors_sites[c(2,9)],
                      label = "var",
                      addEllipses = F,
                      legend.title = list(fill = "Site", size = "FCH4 (mgC m-2 d-1)"),
@@ -104,12 +108,12 @@ p
 
 ggsave("figures/PCA_WQ.png", p,units = "cm",height = 8, width = 6, dpi = 320)
 
-# Figures for the SI (Make figures nicer)
+# Figures for the SI 
 
 # Box plots of WQ parameters
 
 # Specify variables (only one year for each of these at the moment)
-vars <- c('pH','Specific_cond','DOC','TDN','NO3_NO2_N','NH4_N','DRP','TDP','TP','ABS_280nm')
+vars <- c('DOC','TDN','NO3_NO2_N','NH4_N','ABS_280nm')
 nvars <- length(vars)
 
 # Checking distribution of the water quality variables. 
@@ -139,6 +143,13 @@ for (i in 1:nvars){
   df.dist[[i]] <- st
 }
 
+# Test for homogeneity of variances - p > 0.05 means no significant difference between the two variables. Generally this assumption isn't met
+df.hv <- list()
+for (i in 1:nvars){
+  df.hv[[i]] <- df%>%dplyr::rename("var" = vars[i]) %>%var.test(var ~ site, data = .)
+  df.hv[[i]]$data.name <- paste0(vars[i]," by site",sep = "")
+}
+
 # Create empty plot
 plots_bp <- plot.new()
 
@@ -164,7 +175,7 @@ p <- ggarrange(plotlist=plots_bp)
 # for sample sizes smaller than 20 (https://www.datascienceblog.net/post/statistical_test/parametric_sample_size/)
 # See also https://www.datascienceblog.net/post/statistical_test/signed_wilcox_rank_test/
 
-# Since we have a small sample size, I went with Wilcoxon test, but since the data are normally distributed could go with a t-test. 
+# Since we have a small sample size, I went with Wilcoxon test, but since the data are generally normally distributed could go with a t-test. 
 # ASK CO-AUTHORS
 W_test <- list()
 for (i in 1:nvars){
@@ -175,27 +186,173 @@ for (i in 1:nvars){
 
 ggsave("figures/WQ_bp.png", p,units = "cm",height = 8, width = 12, dpi = 320)
 
-# For sites with variables for both years
-data.daily.SO4 <- na.omit(data.daily[,c('site','year','SO4')])
-data.daily.SO4$site <- as.factor(data.daily.SO4$site)
-data.daily.SO4$year <- as.factor(data.daily.SO4$year)
+# For sites with variables for both years 
 
-p1 <- ggboxplot(
-  data.daily.SO4, x = 'site', y = 'SO4', fill = 'year',
-  palette = colors_sites[c(9,2)],
-  lwd=0.2,
-  outlier.size=0.3
-)+theme(text = element_text(size = 6))
-p1 
+# Specify variables (only one year for each of these at the moment)
+vars <- c('pH','Specific_cond','DRP','TDP','TP','SO4','SO4_pred')
+nvars <- length(vars)
 
-ggsave("figures/SO4_bp.png", p1,units = "cm",height = 5, width = 6, dpi = 320)
+# Checking distribution of the water quality variables. 
+# 1) qq plots
+plots_qq <- plot.new()
 
+for (i in 1:nvars){
+  
+  var <- vars[[i]]
+  p <- ggqqplot(na.omit(data.daily), var, ggtheme = theme_bw(),title = var) +
+    facet_grid(site ~ year, labeller = "label_both")
+  
+  plots_qq[[i]] <- p
+}
+
+p <- ggarrange(plotlist=plots_qq)
+p
+
+# 2) shapiro test. Normally distributed if p > 0.05. Note that most ARE normally distributed
+df <- na.omit(data.daily[,c("site","year",vars)])%>%
+  group_by(site) # removed by year here. But should it be included?
+
+df.dist <- list()
+for (i in 1:nvars){
+  dist <- df%>%dplyr::rename("var" = vars[i]) %>%shapiro_test(var)
+  dist$variable <- c(vars[i],vars[i])
+  df.dist[[i]] <- dist
+}
+
+# Test for homogeneity of variances - p > 0.05 means no significant difference between the two variances. Generally assumption NOT met.
+df.hv <- list()
+for (i in 1:nvars){
+  df.hv[[i]] <- df%>%dplyr::rename("var" = vars[i]) %>%var.test(var ~ site, data = .)
+  df.hv[[i]]$data.name <- paste0(vars[i]," by site",sep = "")
+}
+
+# Create empty plot
+plots_bp <- plot.new()
+
+df <- na.omit(data.daily[,c('site','year',vars)])
+df$site <- as.factor(df$site)
+df$year <- as.factor(df$year)
+
+# Loop through each variables - CHECK NA.OMIT once we have all the data
+for (i in 1:nvars){
+  
+  var <- vars[[i]]
+  
+  p1 <- ggboxplot(
+    df, x = 'site', y = var, fill = 'year',
+    palette = colors_sites[c(2,9)],
+    lwd=0.2,
+    outlier.size=0.3
+  )+theme(text = element_text(size = 6))
+  p1 
+  
+  plots_bp[[i]] <- p1
+}
+
+p1 <- ggarrange(plotlist=plots_bp)
+
+# Using the Kruskal-Wallis Test, we can decide whether the population distributions are identical without assuming them to follow the normal distribution.
+# https://www.cfholbert.com/blog/nonparametric_two_way_anova/
+
+# One method that is not unduly affected by violations of the normality and homoscedasticity assumptions of parametric ANOVA is to transform the data values to their ranks, and then compute a parametric two-way ANOVA on the data ranks.
+# This rank transformation procedure can be used to determine whether the ranks differ from group to group. Post-hoc comparisons can be performed on the data ranks to determine which groups are different from each other. 
+
+# Finally, let’s perform two-way ANOVA on the rank-transformed data. 
+# Ranking is one of many procedures used to transform data that do not meet the assumptions of normality. 
+# Conover and Iman (1981) provided a review of the four main types of rank transformations. 
+# One method replaces each original data value by its rank (from 1 for the smallest to N for the largest, where N is the combined data sample size). 
+# This rank-based procedure has been recommended as being robust to non-normal errors, resistant to outliers, and highly efficient for many distributions.
+
+# ANOVA procedure on rank-transformed data
+anova.rnk <- list()
+aov.rnk <- list()
+lt.rnk <- list()
+dist.rnk <- list()
+for (i in 1:nvars){
+  
+  var <- vars[[i]]
+  
+  aov.rnk[[i]] <- df%>%dplyr::rename("var" = vars[i]) %>% aov(
+    rank(var) ~ year * site, data = .,
+    contrasts = list(
+      site = 'contr.sum',
+      year = 'contr.sum'
+    )
+  )
+  anova.rnk[[i]] <- Anova(aov.rnk[[i]], type = 'III')   
+  
+  #Use the Levene’s test to check the homogeneity of variances. The function leveneTest() [in car package] will be used:
+  # NOTE: if p < 0.05. This means that there is evidence to suggest that the variance across groups is statistically significantly different. 
+  # Therefore, we CAN'T assume the homogeneity of variances in the different treatment groups. 
+  # if p > 0.05 CAN assume homogeneity of variances
+  lt.rnk[[i]] <- df%>%dplyr::rename("var" = vars[i])%>%
+    leveneTest(rank(var) ~ year * site, data = .)
+  
+  # Rename intercept to variable name
+  rownames(anova.rnk[[i]])[1] <- vars[i]
+  
+  # Test for normality. Normally distributed if p > 0.05
+  dist <- df%>%dplyr::rename("var" = vars[i]) %>%shapiro_test(var)
+  dist$variable <- c(vars[i],vars[i],vars[i],vars[i])
+  dist.rnk[[i]] <- dist
+}
+
+# Let’s inspect the residuals from each model for 1) Homogeneity of variances and 2) normality. Tests are above.
+plots_hv <- plot.new()
+plots_qq <- plot.new()
+for (i in 1:nvars){
+  
+  var <- vars[[i]]  
+  res.rnk = aov.rnk[[i]]$resid
+  
+  p <- as.ggplot(~(qqnorm(
+    res.rnk, pch = 20, main = paste("Rank-Transformed ",var,sep=""),
+    cex.lab = 1, cex.axis = 0.7, cex.main = 1
+  )))
+  plots_qq[[i]] <- p
+  
+  p1 <- as.ggplot(~plot(aov.rnk[[i]], 1, main = paste("Rank-Transformed ",var,sep="")))
+  plots_hv[[i]] <- p1
+}
+
+# ------------------------------------------------------------------------------------------------
 # Environmental variables on daily data
 
-# Restrict data to 2022 for now. Want a full year of comparisons between sites. 
-# Can also consider just Growing season differences!
-data.daily.2022 <- data.daily[which(data.daily$year == 2022), ]
-data.annual.met.2022 <- data.daily.2022 %>% # Compare results in using 30 min data. Why aren't they exactly the same....
+# Plot of time series
+vars <- c("PPFD_IN","TA","VPD","WTD","P")
+nvars <- length(vars)
+plots_ts <- plot.new()
+ylabel <- c(expression(paste("PPFD ", "(\u00B5mol ","m"^"-2", " d"^"-1",")")),'TA (\u00B0C)','VPD (hPa)','WTD (cm)',expression(paste("P ", "(mm", " d"^"-1",")")))
+
+# Loop through each variables
+for (i in 1:(nvars)){
+  
+  var <- vars[[i]]
+  # Plot time series
+  p <- ggplot() +
+    geom_line(data = data.daily, aes(.data[["datetime"]], .data[[var]], color = factor(.data[["site"]])), size = 0.5)+
+    theme_classic()+
+    scale_color_manual(breaks = c('Hogg','Young'),values=colors_sites[c(2,9)])+
+    labs(color='Site')+xlab('')+ylab(ylabel[[i]])+ 
+    theme(text = element_text(size = 7),axis.text = element_text(size = 8),plot.margin = margin(0, 0.2, 0, 0.2, "cm"))  
+  
+  plots_ts[[i]] <- p
+}
+
+p1 <- ggarrange(plotlist=plots_ts,ncol = 1,
+                nrow = 5, common.legend = TRUE,labels = c("(a)", "(b)", "(c)",
+                                                          "(d)","(e)"),
+                font.label = list(size = 8),hjust = -2)
+p1
+ggsave("figures/Met_ts.png", p1,units = "cm",height = 12, width = 12, dpi = 320)
+
+# Focus on GS for now (use only data when WQ data is available)
+ind_na <- which(is.na(data.daily$SO4_pred_interp))
+
+data.daily.GS <- data.daily
+data.daily.GS[ind_na,!names(data.daily.GS) %in% c("year","site","datetime")] <- NA
+
+data.annual.met.GS <- data.daily.GS %>% # Compare results in using 30 min data. Why aren't they exactly the same....
   group_by(site,year) %>%
   dplyr::summarize(TA = mean(TA,na.rm = TRUE),
                    VPD = mean(VPD,na.rm = TRUE),
@@ -203,53 +360,146 @@ data.annual.met.2022 <- data.daily.2022 %>% # Compare results in using 30 min da
                    P = sum(P,na.rm = TRUE),
                    WTD =  mean(WTD,na.rm = TRUE)) # Make sure measurement length is the same for both datasets
 
-save(data.annual.met.2022,file="output/daily_Met_mean.Rda")
+save(data.annual.met.GS,file="output/daily_Met_mean.Rda") 
 
-# Check assumptions of normality for t-test - Normally distributed if p > 0.05
-data.daily.2022 %>% 
-  group_by(site,year) %>%
-  shapiro_test(TA,VPD,PPFD_IN,P,WTD) # Not normally distributed
-
-# but check outliers further (update manually to inspect each variable)
-ggqqplot(data.daily.2022, "TA", ggtheme = theme_bw()) +
-  facet_grid(site ~ year, labeller = "label_both")
-
-# Compare differences between years
 # Specify variables (only one year for each of these at the moment)
 vars <- c('TA','VPD','PPFD_IN','P','WTD')
 nvars <- length(vars)
 
+# Checking distribution of the water quality variables. 
+# 1) qq plots
+plots_qq <- plot.new()
+
+for (i in 1:nvars){
+  
+  var <- vars[[i]]
+  p <- ggqqplot(na.omit(data.daily.GS), var, ggtheme = theme_bw(),title = var) +
+    facet_grid(site ~ year, labeller = "label_both")
+  
+  plots_qq[[i]] <- p
+}
+
+p <- ggarrange(plotlist=plots_qq)
+p
+
+# 2) shapiro test. Normally distributed if p > 0.05. Note that most are NOT normally distributed
+df <- na.omit(data.daily.GS[,c("site","year",vars)])%>%
+  group_by(site) # removed by year here. But should it be included?
+
+df.dist <- list()
+for (i in 1:nvars){
+  dist <- df%>%dplyr::rename("var" = vars[i]) %>%shapiro_test(var)
+  dist$variable <- c(vars[i],vars[i])
+  df.dist[[i]] <- dist
+}
+
+# Test for homogeneity of variances - p > 0.05 means no significant difference between the two variables. Generally assumption IS met.
+df.hv <- list()
+for (i in 1:nvars){
+  df.hv[[i]] <- df%>%dplyr::rename("var" = vars[i]) %>%var.test(var ~ site, data = .)
+  df.hv[[i]]$data.name <- paste0(vars[i]," by site",sep = "")
+}
+
 # Create empty plot
 plots_bp <- plot.new()
+
+df <- na.omit(data.daily[,c('site','year',vars)])
+df$site <- as.factor(df$site)
+df$year <- as.factor(df$year)
 
 # Loop through each variables - CHECK NA.OMIT once we have all the data
 for (i in 1:nvars){
   
   var <- vars[[i]]
   
-  p <- ggplot(data.daily.2022, aes(as.factor(.data[["site"]]), .data[[var]])) + 
-    geom_boxplot(lwd=0.2,outlier.size=0.3) + xlab('') +
-    geom_signif(comparisons = list(c("Hogg", "Young")), na.rm = TRUE, test = "wilcox.test",
-                map_signif_level=TRUE, tip_length = 0,textsize=1.5,size = 0.2, 
-                y_position = max(data.daily.2022[[var]],na.rm = T)-0.1*(max(data.daily.2022[[var]],na.rm = T)-min(data.daily.2022[[var]],na.rm = T))) + 
-    theme(text = element_text(size = 6))
+  p1 <- ggboxplot(
+    df, x = 'site', y = var, fill = 'year',
+    palette = colors_sites[c(2,9)],
+    lwd=0.2,
+    outlier.size=0.3
+  )+theme(text = element_text(size = 6))
+  p1 
   
-  plots_bp[[i]] <- p
+  plots_bp[[i]] <- p1
 }
 
-p <- ggarrange(plotlist=plots_bp)
+p1 <- ggarrange(plotlist=plots_bp)
 
-# Check if it should be a t-test or Wilcoxon test....Not normally distributed so using Wilcoxon test 
-# The results of these experiments indicate that Student’s t-test should definitely be avoided for sample sizes smaller than 20 (https://www.datascienceblog.net/post/statistical_test/parametric_sample_size/)
-# See also https://www.datascienceblog.net/post/statistical_test/signed_wilcox_rank_test/
+ggsave("figures/Met_bp.png", p1,units = "cm",height = 8, width = 12, dpi = 320)
 
-# Confirm statistics! or should it be t-test? 
-W_test <- list()
+# Using the Kruskal-Wallis Test, we can decide whether the population distributions are identical without assuming them to follow the normal distribution.
+# https://www.cfholbert.com/blog/nonparametric_two_way_anova/
+
+# One method that is not unduly affected by violations of the normality and homoscedasticity assumptions of parametric ANOVA is to transform the data values to their ranks, and then compute a parametric two-way ANOVA on the data ranks.
+# This rank transformation procedure can be used to determine whether the ranks differ from group to group. Post-hoc comparisons can be performed on the data ranks to determine which groups are different from each other. 
+
+# Finally, let’s perform two-way ANOVA on the rank-transformed data. 
+# Ranking is one of many procedures used to transform data that do not meet the assumptions of normality. 
+# Conover and Iman (1981) provided a review of the four main types of rank transformations. 
+# One method replaces each original data value by its rank (from 1 for the smallest to N for the largest, where N is the combined data sample size). 
+# This rank-based procedure has been recommended as being robust to non-normal errors, resistant to outliers, and highly efficient for many distributions.
+
+# ANOVA procedure on rank-transformed data and regular data
+anova.rnk <- list()
+anova.org <- list()
+aov.rnk <- list()
+aov.org <- list()
+lt.rnk <- list()
+dist.rnk <- list()
 for (i in 1:nvars){
   
   var <- vars[[i]]
-  W_test[[i]] <- wilcox.test(na.omit(data.daily)[[var]]~na.omit(data.daily)[["site"]]) # No significant differences between sites
+  
+  aov.rnk[[i]] <- df%>%dplyr::rename("var" = vars[i]) %>% aov(
+    rank(var) ~ year * site, data = .,
+    contrasts = list(
+      site = 'contr.sum',
+      year = 'contr.sum'
+    )
+  )
+  anova.rnk[[i]] <- Anova(aov.rnk[[i]], type = 'III') # Really similar to regular anova below!
+  
+  # Let’s first perform two-way ANOVA on the original data.
+  aov.org[[i]] <- df%>%dplyr::rename("var" = vars[i]) %>% aov(
+    var ~ year * site, data = .,
+    contrasts = list(
+      site = 'contr.sum',
+      year = 'contr.sum'
+    )
+  )
+  
+  anova.org[[i]] <- Anova(aov.org[[i]], type = 'III')
+  
+  #Use the Levene’s test to check the homogeneity of variances. The function leveneTest() [in car package] will be used:
+  # NOTE: if p < 0.05. This means that there is evidence to suggest that the variance across groups is statistically significantly different. 
+  # Therefore, we CAN'T assume the homogeneity of variances in the different treatment groups. 
+  # if p > 0.05 CAN assume homogeneity of variances
+  lt.rnk[[i]] <- df%>%dplyr::rename("var" = vars[i])%>%
+    leveneTest(rank(var) ~ year * site, data = .)
+  
+  # Rename intercept to variable name
+  rownames(anova.rnk[[i]])[1] <- vars[i]
+  
+  # Test for normality. Normally distributed if p > 0.05
+  dist <- df%>%dplyr::rename("var" = vars[i]) %>%shapiro_test(var)
+  dist$variable <- c(vars[i],vars[i],vars[i],vars[i])
+  dist.rnk[[i]] <- dist
 }
 
-ggsave("figures/Met_bp.png", p,units = "cm",height = 8, width = 12, dpi = 320)
-
+# Let’s inspect the residuals from each model for 1) Homogeneity of variances and 2) normality. Tests are above.
+plots_hv <- plot.new()
+plots_qq <- plot.new()
+for (i in 1:nvars){
+  
+  var <- vars[[i]]  
+  res.rnk = aov.rnk[[i]]$resid
+  
+  p <- as.ggplot(~(qqnorm(
+    res.rnk, pch = 20, main = paste("Rank-Transformed ",var,sep=""),
+    cex.lab = 1, cex.axis = 0.7, cex.main = 1
+  )))
+  plots_qq[[i]] <- p
+  
+  p1 <- as.ggplot(~plot(aov.rnk[[i]], 1, main = paste("Rank-Transformed ",var,sep="")))
+  plots_hv[[i]] <- p1
+}
