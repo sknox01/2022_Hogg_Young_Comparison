@@ -30,6 +30,14 @@ load(here("output/30min_data.Rda"))
 data.site <- data %>%
   group_by(site)
 
+ggplot() +
+  geom_point(data = data.daily.GS, aes(GPP_PI_F_NT_gC, GPP_PI_F_DT_gC, color = factor(site)))+
+  theme_classic()
+
+ggplot() +
+  geom_point(data = data.daily.GS, aes(GPP_, TA, color = factor(site)))+
+  theme_classic()
+
 # Plot individual variables by site
 p <- ggplot() +
   geom_line(data = data.site, aes(x = datetime, y = pot_rad, color = as.factor(site)), size = 1)

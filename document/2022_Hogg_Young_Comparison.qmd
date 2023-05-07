@@ -74,6 +74,7 @@ ABS 280 - does higher mean more recalcitrant DOC?
 All data processing and statistical analyses were conducted using R (R Core Team, 2019). Significant differences in water quality parameters, environmental variables, and fluxes between sites, years and the interaction between site and year were assessed using a two-way ANOVA with Type III Sums of Squares on the rank-transformed data, as ranking can be used to transform data that do not meet the assumptions of normality (ref). Here, each original data value was replaced by its rank, with 1 for the smallest value to N for the largest, where N is the combined data sample size. This rank-based approach is robust to non-normal errors, resistant to outliers, and is effective for many distributions. When comparing differences in variables between sites, years and the interaction between site and year, we only considered the summer period when water quality measurements were available.
 
 Multivariate associations of water quality parameters across sites were analyzed using principal component analysis (PCA). All variables were centered and scaled, and PCA was done using the prcomp function in base R. 
+
 As certain water quality parameters were highly correlated (Figure [-@fig-PCA]), we only selected a subset of water quality parameters for the hierarchical mixed model. To capture the primary differences in water quality parameters between sites, only $SO_{4}^{2-}$, TP, and pH were included in the model. 
 
 # Results
@@ -83,8 +84,7 @@ As certain water quality parameters were highly correlated (Figure [-@fig-PCA]),
 Figure [-@fig-met_ts].
 
 ![met_ts.](../figures/Met_ts.png){#fig-met_ts}
-
-Given the proximity of the sites, Hogg and Young experienced similar meteorological conditions; there were no significant differences in mean growing season daily incoming photosynthetically active radiation (PPFD_IN), air temperature (TA), vapor pressure deficit (VPD), and precipitation (P) between sites. However, water levels at Young were significantly higher than at Hogg (Table [-@tbl-MET]; Figure [-@fig-met_ts]). Mean growing season temperatures were significantly higher in 2021 than 2022, with an average of 16.3 and 16.4 C at Hogg and Young, respectively. This also resulted in higher VPD in 2021 compared to 2022 (Table [-@tbl-MET]). 
+Given the proximity of the sites, Hogg and Young experienced similar meteorological conditions; there were no significant differences in mean growing season daily average incoming photosynthetically active radiation (PPFD_IN), air temperature (TA), vapor pressure deficit (VPD), and precipitation (P) between sites. Though, water levels (WTD) at Young were significantly higher than at Hogg, and WTD was significantly higher in 2022 relative to 2021 (Table [-@tbl-MET]; Figure [-@fig-met_ts]). Mean growing season temperatures did not differ significantly between years (Table [-@tbl-MET]). However, the other meteorological variables did differ significantly between years, with higher daily precipitation and VPD observed in 2021 relative to 2022 (Table [-@tbl-MET]).
 
 ```{r, echo=FALSE, warning = FALSE, message = FALSE}
 #| label: tbl-MET
