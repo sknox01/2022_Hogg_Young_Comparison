@@ -27,8 +27,6 @@ library(car)
 library(ggplotify)
 
 # CREATE FUNCTIONS!!
-# Reconcile with exploratory_plots & clean up exploratory_plots. 
-# Make sure to include all assumptions here so that it's easy to follow!
 
 # Load data
 load(here("output/daily_data.Rda"))
