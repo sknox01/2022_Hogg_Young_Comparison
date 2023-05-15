@@ -89,7 +89,8 @@ data.site.annual <- data.site %>% group_by(site) %>%
 data.site.annual$GHG <- (data.site.annual$NEE+data.site.annual$FCH4)*44.01/12.011+data.site.annual$FCH4*16.04/12.011*45
 data.site.annual
 
-data.site.annual[,c(2:length(data.site.annual))] <- round(data.site.annual[,c(2:length(data.site.annual))])
+data.site.annual[,c(2,4:length(data.site.annual))] <- round(data.site.annual[,c(2,4:length(data.site.annual))])
+data.site.annual[,3] <- round(data.site.annual[,3],1)
 
 save(data.site.annual,file="output/annual_sums.Rda")
 

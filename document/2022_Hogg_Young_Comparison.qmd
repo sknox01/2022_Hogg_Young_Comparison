@@ -101,7 +101,7 @@ knitr::kable(MET)
 
 ## Water quality observations
 
-Significant differences were observed in water quality parameters across sites (Table [-@tbl-WQ], Figure [-@fig-PCA]). Averaged across years, Hogg had significantly higher $SO_{4}^{2-}$, specific conductivity, dissolved organic carbon (DOC), total dissolved nitrogen (TDN), and Specific ultraviolet absorbance at 280 nm (ABS 280) than Young. Conversely, dissolved reactive phosphorus (DRP), total dissolved phosphorus (TDP) concentrations than Young, total phosphorus (TP) was significantly lower at Hogg than Young. No significant differences in pH, NO3 or NO2, or NH4 were observed between sites.
+Significant differences were observed in water quality parameters across sites (Table [-@tbl-WQ], Figure [-@fig-PCA]). Averaged across years, Hogg had significantly higher $SO_{4}^{2-}$, specific conductivity, dissolved organic carbon (DOC), total dissolved nitrogen (TDN), and Specific ultraviolet absorbance at 280 nm (ABS 280) than Young (Table [-@tbl-WQ]). Conversely, dissolved reactive phosphorus (DRP), total dissolved phosphorus (TDP) concentrations than Young, total phosphorus (TP) was significantly lower at Hogg than Young. No significant differences in pH, NO3 or NO2, or NH4 were observed between sites.
 
 ```{r, echo=FALSE, warning = FALSE, message = FALSE}
 #| label: tbl-WQ
@@ -112,18 +112,18 @@ WQ <- data.daily.WQ.mean
 knitr::kable(WQ)
 ```
 
-Figure [-@fig-SO4].
+Figure out best figure(s) to use.
 
 ![SO4.](../figures/SO4_bp.png){#fig-SO4}
 
-
-Figure [-@fig-PCA].
 
 ![PCA.](../figures/PCA_WQ.png){#fig-PCA}
 
 ## GHG fluxes
 
-Both wetland sites were net $CO_{2}$ sources over the course of the growing season, although net $CO_{2}$ update was lower at Young relative to Hogg due to lower GPP at Young (Figure [-@fig-fluxes]). Annually, this resulted in in Hogg being a net $CO_{2}$ sink in 2021-2022, taking up 34 gC $m^{-2}$ $m^{-1}$, while Young was a net $CO_{2}$ source of 57 gC $m^{-2}$ $m^{-1}$.
+Both wetland sites were net $CO_{2}$ sources over the course of the growing season, although net $CO_{2}$ update was lower at Young relative to Hogg due to lower GPP at Young (Figure [-@fig-fluxes]). Annually, this resulted in in Hogg being a net $CO_{2}$ sink in 2021-2022, taking up 34 gC $m^{-2}$ $yr^{-1}$, while Young was a net $CO_{2}$ source of 57 gC $m^{-2}$ $yr^{-1}$. Cumulative annual GPP at Hogg was 31% greater than Young, while differences in annual Reco were smaller between sites (~10%) (Table [-@tbl-fluxes])
+
+Relative difference in $CH_{4}$ fluxes were even larger between sites (Figure [-@fig-fluxes]; Table [-@tbl-fluxes]). While Young showed a strong seasonal cycle in FCH4 over the course of the year, with daily emissions exceeding >100 mgC $m^{-2}$ $d^{-1}$ during the growing season, emissions at Hogg hovered near zero across the measurement period. As such, cumulative annual FCH4 at Young was >6 time larger at Young relative to Hogg (7.6 versus 1.12 gC $m^{-2}$ $yr^{-1}$, respectively) (Table [-@tbl-fluxes]).
 
 
 ![Fluxes.](../figures/flux_ts.png){#fig-fluxes}
@@ -139,6 +139,7 @@ fluxes_annual <- data.site.annual
 knitr::kable(fluxes_annual)
 ```
 
+## Driver of FCH4 
 
 # Discussion
 
