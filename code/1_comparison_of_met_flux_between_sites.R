@@ -26,7 +26,8 @@ library(rstatix)
 library(car)
 library(ggplotify)
 
-# CREATE FUNCTIONS!!
+# CLEAN UP CODE AND CREATE FUNCTIONS!!
+# Clean up figures!
 
 # Load data
 load(here("output/daily_data.Rda"))
@@ -516,7 +517,7 @@ ylabel <- c(expression(paste("FC ", "(gC ","m"^"-2", " d"^"-1",")")),expression(
             expression(paste("GPP DT ", "(gC ","m"^"-2", " d"^"-1",")")),expression(paste("GPP NT ", "(gC ","m"^"-2", " d"^"-1",")")),
             expression(paste("RECO DT ", "(gC ","m"^"-2", " d"^"-1",")")),expression(paste("RECO NT ", "(gC ","m"^"-2", " d"^"-1",")")))
 subplot_label <- c("(a)","(b)","(c)","(d)","(e)","(f)")
-ypos <- c(10,10,10,10,10,10)
+ypos <- c(10,200,10,10,10,10)
 # Loop through each variables
 for (i in 1:(nvars)){
   
@@ -532,7 +533,7 @@ for (i in 1:(nvars)){
   
   plots_ts[[i]] <- p
 }
-
+plots_ts[[1]] <- plots_ts[[1]]+geom_hline(yintercept=0, linetype="dashed")
 p1 <- ggarrange(plotlist=plots_ts,ncol = 1,
                 nrow = 6, common.legend = TRUE,hjust = -3.5) # FIX UP FIGURE
 p1

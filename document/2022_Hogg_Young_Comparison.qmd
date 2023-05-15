@@ -84,11 +84,12 @@ As certain water quality parameters were highly correlated (Figure [-@fig-PCA]),
 Figure [-@fig-met_ts].
 
 ![met_ts.](../figures/Met_ts.png){#fig-met_ts}
+
 Given the proximity of the sites, Hogg and Young experienced similar meteorological conditions; there were no significant differences in mean growing season daily average incoming photosynthetically active radiation (PPFD_IN), air temperature (TA), vapor pressure deficit (VPD), and precipitation (P) between sites. Though, water levels (WTD) at Young were significantly higher than at Hogg, and WTD was significantly higher in 2022 relative to 2021 (Table [-@tbl-MET]; Figure [-@fig-met_ts]). Mean growing season temperatures did not differ significantly between years (Table [-@tbl-MET]). However, the other meteorological variables did differ significantly between years, with higher daily precipitation and VPD observed in 2021 relative to 2022 (Table [-@tbl-MET]).
 
 ```{r, echo=FALSE, warning = FALSE, message = FALSE}
 #| label: tbl-MET
-#| tbl-cap: Growing season mean air temperature (TA) and vapour pressure deficit (VPD), photosynthentically active radiation (PPFD_IN), and water table dept (WTD), and cumulative precipitation at Hogg and Young during 2021 and 2021.
+#| tbl-cap: Growing season mean air temperature (TA) and vapour pressure deficit (VPD), photosynthentically active radiation (PPFD_IN), and water table dept (WTD), and cumulative precipitation at Hogg and Young during 2021 and 2022.
 # Make sure there are no empty lines in the code of the cross referencing won't work!
 load(here("output/daily_Met_mean.Rda"))
 data.annual.met.GS[,c(3,4,6,7)] <- round(data.annual.met.GS[,c(3,4,6,7)],1)
@@ -104,7 +105,7 @@ Significant differences were observed in water quality parameters across sites (
 
 ```{r, echo=FALSE, warning = FALSE, message = FALSE}
 #| label: tbl-WQ
-#| tbl-cap: Differences in water quality parameters across sites.
+#| tbl-cap: Annual GHG budgets.
 # Make sure there are no empty lines in the code of the cross referencing won't work!
 load(here("output/daily_WQ_mean.Rda"))
 WQ <- data.daily.WQ.mean
@@ -120,13 +121,24 @@ Figure [-@fig-PCA].
 
 ![PCA.](../figures/PCA_WQ.png){#fig-PCA}
 
-### Meteorological conditions
+## GHG fluxes
+
+Both wetland sites were net $CO_{2}$ sources over the course of the growing season, although net $CO_{2}$ update was lower at Young relative to Hogg due to lower GPP at Young (Figure [-@fig-fluxes]). Annually, this resulted in in Hogg being a net $CO_{2}$ sink in 2021-2022, taking up 34 gC $m^{-2}$ $m^{-1}$, while Young was a net $CO_{2}$ source of 57 gC $m^{-2}$ $m^{-1}$.
 
 
+![Fluxes.](../figures/flux_ts.png){#fig-fluxes}
 
-Figure [-@fig-NEE].
+(Table [-@tbl-fluxes])
 
-![NEE.](../figures/NEE.png){#fig-NEE}
+```{r, echo=FALSE, warning = FALSE, message = FALSE}
+#| label: tbl-fluxes
+#| tbl-cap: Differences in water quality parameters across sites.
+# Make sure there are no empty lines in the code of the cross referencing won't work!
+load(here("output/annual_sums.Rda"))
+fluxes_annual <- data.site.annual
+knitr::kable(fluxes_annual)
+```
+
 
 # Discussion
 
