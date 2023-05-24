@@ -132,10 +132,10 @@ Relative difference in $CH_{4}$ fluxes were even larger between sites (Figure [-
 
 ```{r, echo=FALSE, warning = FALSE, message = FALSE}
 #| label: tbl-fluxes
-#| tbl-cap: Differences in water quality parameters across sites.
+#| tbl-cap: Differences in fluxes across sites.
 # Make sure there are no empty lines in the code of the cross referencing won't work!
 load(here("output/annual_sums.Rda"))
-fluxes_annual <- data.site.annual
+fluxes_annual <- data.site.annual.all
 knitr::kable(fluxes_annual)
 ```
 

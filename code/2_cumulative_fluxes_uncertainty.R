@@ -86,17 +86,11 @@ data.site.annual <- data.site %>% group_by(site) %>%
             Reco_DT = sum(Reco_PI_F_DT*12.01*60*30/(10^6), na.rm = TRUE),
             Reco_NT = sum(Reco_PI_F_NT*12.01*60*30/(10^6), na.rm = TRUE))
 
-ggplot()+
-  geom_point(data = data.site[data.site$site == 'Hogg',], aes(datetime, NEE_PI_F_MDS,color = as.factor(site)))+
-  geom_point(data = data, aes(datetime, NEE_uStar_f))
-
 data.site.annual$GHG <- (data.site.annual$NEE+data.site.annual$FCH4)*44.01/12.011+data.site.annual$FCH4*16.04/12.011*45
 data.site.annual
 
 data.site.annual[,c(2,4:length(data.site.annual))] <- round(data.site.annual[,c(2,4:length(data.site.annual))])
 data.site.annual[,3] <- round(data.site.annual[,3],1)
-
-save(data.site.annual,file="output/annual_sums.Rda")
 
 # Uncertainty
 source('/Users/sara/Code/Biomet.net/R/uncertainty/ini_files/HOGG_annual_uncertainty_ini.R')
@@ -112,4 +106,20 @@ sdAnnual_gC_Young <- mean_sdAnnual_gC
 sdAnnual_gC <- rbind(sdAnnual_gC_Hogg,sdAnnual_gC_Young)
 sdAnnual_gC <- cbind(data.frame("site" = c('Hogg','Young')),sdAnnual_gC)
 
+# Create empty table
+nums <- unlist(lapply(data.site.annual, is.numeric), use.names = FALSE)  
+data.site.uncertainty <- data.site.annual
+data.site.uncertainty[ , nums] <- 'TBD'
 
+# Fill in the table
+data.site.uncertainty[,c(2,4,6)] <- round(sdAnnual_gC[,c(5,7,8)]) #Note change column if variables in either table changes & update rounding for FCH4
+
+data.site.uncertainty.num <- t(data.site.uncertainty[,c(2:ncol(data.site.uncertainty))])
+data.site.annual.num <- t(data.site.annual[,c(2:ncol(data.site.annual))])
+
+data.site.annual.all <- as.data.frame(t(as.data.frame(do.call(cbind, lapply(1:ncol(data.site.annual.num), function(i,j) paste0(data.site.annual.num[, i], " ± ", data.site.uncertainty.num[ , i]))))))
+colnames(data.site.annual.all) <- colnames(data.site.annual[,c(2:ncol(data.site.annual))])
+rownames(data.site.annual.all) <- c("Hogg","Young")
+head(data.site.annual.all)
+
+save(data.site.annual.all,file="output/annual_sums.Rda")
