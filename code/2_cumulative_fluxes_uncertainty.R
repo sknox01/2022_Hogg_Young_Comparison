@@ -9,7 +9,7 @@ library(ggpubr)
 # Explore 30 min data
 load(here("output/30min_data.Rda"))
 
-# DEFINE ANNUAL PERIODS (June-June of each year)
+# DEFINE ANNUAL PERIODS (June-June of each year) - CHECK WHY IT DIFFERS FROM FLUX_UNCERTAINTY! LOAD DATA AGAIN!
 # Young
 year1_s_Young <- which(data$datetime == as.POSIXct("2021-06-01 00:30:00",tz = 'UTC') & data$site == 'Young')
 year1_e_Young <- which(data$datetime == as.POSIXct("2022-06-01 00:00:00",tz = 'UTC') & data$site == 'Young')
@@ -86,6 +86,10 @@ data.site.annual <- data.site %>% group_by(site) %>%
             Reco_DT = sum(Reco_PI_F_DT*12.01*60*30/(10^6), na.rm = TRUE),
             Reco_NT = sum(Reco_PI_F_NT*12.01*60*30/(10^6), na.rm = TRUE))
 
+ggplot()+
+  geom_point(data = data.site[data.site$site == 'Hogg',], aes(datetime, NEE_PI_F_MDS,color = as.factor(site)))+
+  geom_point(data = data, aes(datetime, NEE_uStar_f))
+
 data.site.annual$GHG <- (data.site.annual$NEE+data.site.annual$FCH4)*44.01/12.011+data.site.annual$FCH4*16.04/12.011*45
 data.site.annual
 
@@ -94,4 +98,18 @@ data.site.annual[,3] <- round(data.site.annual[,3],1)
 
 save(data.site.annual,file="output/annual_sums.Rda")
 
-# Error bars
+# Uncertainty
+source('/Users/sara/Code/Biomet.net/R/uncertainty/ini_files/HOGG_annual_uncertainty_ini.R')
+source('/Users/sara/Code/Biomet.net/R/uncertainty/flux_uncertainty.R')
+
+sdAnnual_gC_Hogg <- mean_sdAnnual_gC
+
+source('/Users/sara/Code/Biomet.net/R/uncertainty/ini_files/YOUNG_annual_uncertainty_ini.R')
+source('/Users/sara/Code/Biomet.net/R/uncertainty/flux_uncertainty.R')
+
+sdAnnual_gC_Young <- mean_sdAnnual_gC
+
+sdAnnual_gC <- rbind(sdAnnual_gC_Hogg,sdAnnual_gC_Young)
+sdAnnual_gC <- cbind(data.frame("site" = c('Hogg','Young')),sdAnnual_gC)
+
+
