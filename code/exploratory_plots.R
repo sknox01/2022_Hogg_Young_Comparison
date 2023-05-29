@@ -523,7 +523,7 @@ data.daily.model$year <- as.factor(data.daily.model$year)
 data.daily.model$FCH4_gC_log <- log(data.daily.model$FCH4_gC)
 
 pairs.panels(
-  data.daily.model[,c("FCH4_gC","FCH4_gC_tf","TA","WTD","SO4_interp")],
+  data.daily.model[,c("FCH4_gC","FCH4_gC","TA","WTD","SO4_interp")],
   main = "",
   gap = 0, # set to zero for no gap between plot panels
   lm = TRUE, # draw linear regression lines for pairs

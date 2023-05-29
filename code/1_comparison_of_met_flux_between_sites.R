@@ -1,3 +1,4 @@
+# Delete some packages!
 library(lubridate) # work with dates
 library(dplyr)     # data manipulation (filter, summarize, mutate)
 library(ggplot2)   # graphics
