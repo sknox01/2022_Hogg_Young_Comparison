@@ -10,9 +10,14 @@ library(AICcmodavg)
 # Load data
 load(here("output/daily_data.Rda"))
 
-# Mixed effects modeling
-vars_model <- c("FCH4_gC","TA","WTD","SO4_interp","TP_interp","DOC_interp","NH4_N_interp","NO3_NO2_N_interp")
-data.daily.model <- na.omit(data.daily[,c(vars_model,"site","year")]) 
+# Create log variables
+min_FCH4 <- min(na.omit(data.daily$FCH4_gC))-0.00001
+data.daily$logFCH4_gC <- log(data.daily$FCH4_gC-min_FCH4)
+data.daily$logSO4_interp <- log(data.daily$SO4_interp)
+
+# Create new data frame
+vars_model <- c("FCH4_gC","logFCH4_gC","TA","WTD","SO4_interp","logSO4_interp","TP_interp","DOC_interp","NH4_N_interp","NO3_NO2_N_interp")
+data.daily.model <- na.omit(data.daily[,c(vars_model,"site","year","datetime")]) 
 data.daily.model$site <- as.factor(data.daily.model$site)
 data.daily.model$year <- as.factor(data.daily.model$year)
 
@@ -32,6 +37,14 @@ data.daily.model$year <- as.factor(data.daily.model$year)
 # An adjusted sample sized based on how correlated the data within groups are.
 
 # mixed models can deal with unbalanced designs 
+
+# Visualize data 
+# NOTE: do some data filtering?
+ggplot(data.daily.model, aes(x = datetime,color = site))+
+  geom_line(aes(y = FCH4_gC))
+
+ggplot(data.daily.model, aes(x = datetime,color = site))+
+  geom_line(aes(y = logFCH4_gC))
 
 # Steps
 # 1) Check distribution of variables - Major skews can lead to problems with model homogeneity down the road. 
@@ -67,6 +80,13 @@ for (i in 1:length(vars_model)){
 data.daily.model.norm <- data.daily.model
 data.daily.model.norm[,vars_model] <- as.data.frame(scale(data.daily.model[,vars_model]))
 
+# Visualize normalized data
+ggplot(data.daily.model.norm, aes(x = datetime,color = site))+
+  geom_line(aes(y = FCH4_gC))
+
+ggplot(data.daily.model.norm, aes(x = datetime,color = site))+
+  geom_line(aes(y = logFCH4_gC))
+
 # 4) To know if a mixed model is necessary for your data set you must establish if it is actually important to account for variation in the factors that might be affecting the relationship that you're interested in, Lake and Species in this case.
 # We can do this by:
 # a) Creating a linear model without factors
@@ -74,8 +94,8 @@ data.daily.model.norm[,vars_model] <- as.data.frame(scale(data.daily.model[,vars
 # c) Plotting the residuals of the linear model against the factors of interest
 
 # TEST simple linear model
-m0<-lm(FCH4_gC~TA+WTD+SO4_interp+TP_interp+NH4_N_interp+NO3_NO2_N_interp, data=data.daily.model)
-m0.resid<-rstandard(lm.test)
+m0<-lm(logFCH4_gC~TA+WTD+SO4_interp+TP_interp+NH4_N_interp+NO3_NO2_N_interp, data=data.daily.model.norm)
+m0.resid<-rstandard(m0)
 
 # site effect
 plot(m0.resid~ data.daily.model.norm$site, xlab = "Site", ylab="Standardized residuals")
@@ -93,21 +113,23 @@ abline(0,0, lty=2)
 # Fitting using maximum likelihood is done by setting REML=FALSE in the lmer command.
 
 m1 <- lmer(FCH4_gC~TA+WTD+SO4_interp+TP_interp+NH4_N_interp+NO3_NO2_N_interp+(1|site), data = data.daily.model.norm, REML=F)
-min <- min(data.daily.model.norm$FCH4_gC)-0.001
-m2 <- lmer(log(FCH4_gC-min)~TA+WTD+SO4_interp+TP_interp+NH4_N_interp+NO3_NO2_N_interp+(1|site), data = data.daily.model.norm, REML=F) # deal with negative values
-m3 <- lmer(log(FCH4_gC-min)~TA+WTD+SO4_interp+TP_interp+NH4_N_interp+(1|site), data = data.daily.model.norm, REML=F) # deal with negative values
-# TEST MORE!! AND CHECK IF REML SHOULD BE T/F
+m2 <- lmer(logFCH4_gC~TA+WTD+SO4_interp+TP_interp+NH4_N_interp+NO3_NO2_N_interp+(1|site), data = data.daily.model.norm, REML=F) # deal with negative values
+m3 <- lmer(logFCH4_gC~TA+WTD+SO4_interp+TP_interp+NH4_N_interp+(1|site), data = data.daily.model.norm, REML=F) # deal with negative values
+m4 <- lmer(logFCH4_gC~TA+WTD+logSO4_interp+TP_interp+NH4_N_interp+(1|site), data = data.daily.model.norm, REML=F) # deal with negative values
 
-AICc<-c(AICc(m0), AICc(m1), AICc(m2), AICc(m3))
+# TEST MORE!! AND CHECK IF REML SHOULD BE T/F
+# Log some vars
+
+AICc<-c(AICc(m0), AICc(m1), AICc(m2), AICc(m3), AICc(m4))
 # Put values into one table for easy comparison
-Model<-c("M0", "M1", "M2", "M3")
+Model<-c("M0", "M1", "M2", "M3", "M4")
 AICtable<-data.frame(Model=Model, AICc=AICc)
 AICtable
 
 # 6) Model validation
 # Checking model assumptions
 # a) Look at independence: plot fitted values vs residuals
-m.final <- m2
+m.final <- m4
 E1 <- resid(m.final) # Select final model
 F1<-fitted(m.final)
 plot(x = F1, 
@@ -115,6 +137,17 @@ plot(x = F1,
      xlab = "Fitted Values",
      ylab = "Normalized residuals")
 abline(h = 0, lty = 2)
+
+data.daily.model.norm$F1 <- F1
+data.daily.model.norm$E1 <- E1
+
+# Visualize time series (change if final model changes)
+ggplot(data.daily.model.norm, aes(x = datetime,color = site))+
+  geom_point(aes(y = logFCH4_gC))+
+  geom_line(aes(y = E1))
+
+ggplot(data.daily.model.norm, aes(x = logFCH4_gC,y = E1,color = site))+
+  geom_point()
 
 # b) Look at independence:
 # i. plot residuals vs each covariate in the model
@@ -132,8 +165,9 @@ abline(h = 0, lty = 2)
 
 # c) Look at normality: histogram
 hist(E1)
+shapiro_test(E1)
 
 # Interpreting results and visualizing the model
 # a) Interpreting results
 summary(m.final)
-
+coef(m.final)
