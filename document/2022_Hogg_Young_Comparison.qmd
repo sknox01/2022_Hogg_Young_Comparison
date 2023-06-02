@@ -75,7 +75,7 @@ All data processing and statistical analyses were conducted using R (R Core Team
 
 Multivariate associations of water quality parameters across sites were analyzed using principal component analysis (PCA). All variables were centered and scaled, and PCA was done using the prcomp function in base R. 
 
-As certain water quality parameters were highly correlated (Figure [-@fig-PCA]), we only selected a subset of water quality parameters for the hierarchical mixed model. To capture the primary differences in water quality parameters between sites, only $SO_{4}^{2-}$, TP, and pH were included in the model. 
+To investigate the environmental factors controlling differences in FCH4 across sites, we used a random forest (RF) approach. The RF algorithm introduced by Breiman (2001) is an ensemble method of regression tree. The algorithm creates bootstrapped data sets and then generates independent regression trees using randomly sampled variables at each split node. Then, RF aggregates the prediction results of the individual trees. We generated 500 regression trees for each case using the “randomForest” R package (Liaw & Wiener, 2002). We then used the varImp function to determine the top predictors of FCH4 across sites. The RF algorithm estimates variable importance by permuting a predictor variable and then assessing how much the prediction error increases. As certain water quality parameters were highly correlated (Figure [-@fig-PCA]), we only selected a subset of water quality parameters for the random forest model. To capture the primary differences in water quality parameters between sites, only $SO_{4}^{2-}$, TP, and pH were included in the model [revise]. 
 
 # Results
 

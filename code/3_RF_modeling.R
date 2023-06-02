@@ -22,6 +22,7 @@ ggplotly(ggplot()+
 ggplotly(ggplot()+
            geom_point(data = data.daily, aes(x = TP_interp,y = FCH4_gC,color = site)))
 
+# from https://github.com/yeonukkim/EC_FCH4_gapfilling
 # Select variables for the model
 vars <- c("FCH4_gC","TA","WTD","GPP_PI_F_NT_gC","SO4_pred_interp","TP_interp","DOC_interp","NH4_N_interp","NO3_NO2_N_interp")
 data.daily.model <- na.omit(data.daily[,c(vars,"site","year","datetime")]) # Remove all missing data
@@ -41,26 +42,38 @@ index <- createDataPartition(ML.df$FCH4_gC, p=0.75, list=F)
 train_set <- ML.df[index,]
 test_set <- ML.df[-index,]
 
-tgrid <- data.frame(mtry = c(3,6,9,12))
+tgrid <- data.frame(mtry = c(1,2,3,4,5,6,9))
 #Add parallel processing for the fast processing if you want to
 library(parallel)
 library(doParallel)
 cluster <- makeCluster(6)
 registerDoParallel(cluster)
-RF_FCH4 <- train(FCH4_gC ~ ., data = train_set[,predictors],
-								 method = "rf",
-								 preProcess = c("medianImpute"),                #impute missing met data with median
-								 trControl=trainControl(method = "repeatedcv",   #three-fold cross-validation for model parameters 3 times
-								 											number = 3,                #other option: "cv" without repetition
-								 											repeats = 3),
-								 tuneGrid = tgrid,
-								 na.action = na.pass,
-								 allowParallel=TRUE, # This requires parallel packages. Otherwise you can choose FALSE.
-								 ntree=500, # can generate more trees
-								 importance = TRUE)
+# RF_FCH4 <- train(FCH4_gC ~ ., data = train_set[,predictors],
+# 								 method = "rf",
+# 								 preProcess = c("medianImpute"),                #impute missing met data with median
+# 								 trControl=trainControl(method = "repeatedcv",   #three-fold cross-validation for model parameters 3 times
+# 								 											number = 3,                #other option: "cv" without repetition
+# 								 											repeats = 3),
+# 								 tuneGrid = tgrid,
+# 								 na.action = na.pass,
+# 								 allowParallel=TRUE, # This requires parallel packages. Otherwise you can choose FALSE.
+# 								 ntree=500, # can generate more trees
+# 								 importance = TRUE)
+# 
+# RF_FCH4$bestTune
+# RF_FCH4$results
 
-RF_FCH4$bestTune
-RF_FCH4$results
+set.seed(500)
+RF_FCH4 <- train(FCH4_gC ~ ., data = train_set[,predictors],
+                 method = "rf",
+                 preProcess = c("medianImpute"),  # impute missing met data with median (but it will not be applied since we used gap-filled predictors)
+                 trControl = trainControl(method = "none"),
+                 tuneGrid=data.frame(mtry=3), # use known mtry value.
+                 na.action = na.pass,
+                 allowParallel=FALSE,
+                 ntree=500, # can generate more trees
+                 importance = TRUE)
+
 
 # variable importance
 plot(varImp(RF_FCH4, scale = FALSE), main="variable importance")
@@ -69,6 +82,20 @@ plot(varImp(RF_FCH4, scale = FALSE), main="variable importance")
 test_set$FCH4_rf <- predict(RF_FCH4, test_set, na.action = na.pass)
 regrRF <- lm(test_set$FCH4_rf ~ test_set$FCH4_gC); 
 print(summary(regrRF))
+
+library(Metrics)
+## 
+## Attaching package: 'Metrics'
+## The following objects are masked from 'package:caret':
+## 
+##     precision, recall
+print(paste0('MAE: ' , mae(y_test,predictions) ))
+## [1] "MAE: 742.401258870433"
+print(paste0('MSE: ' ,caret::postResample(predictions , y_test)['RMSE']^2 ))
+## [1] "MSE: 1717272.6547428"
+print(paste0('R2: ' ,caret::postResample(predictions , y_test)['Rsquared'] ))
+## [1] "R2: 0.894548902990278"
+
 ggplot(test_set, aes(x=FCH4_gC, y=FCH4_rf)) + geom_abline(slope = 1, intercept = 0)+
   geom_point() + geom_smooth(method = "lm") + ggtitle("testset")
 
@@ -86,6 +113,8 @@ result %>% ggplot(aes(datetime,FCH4_RF_model,color = as.factor(site))) + geom_li
   geom_point(aes(datetime,FCH4,color = as.factor(site)))+
   theme_bw() + ylab(expression(paste("FCH4 (gC ", m^-2, d^-1,")")))
 
+# https://www.r-bloggers.com/2021/10/random-forest-in-r-2/
+  
 # https://rpubs.com/vishal1310/QuickIntroductiontoPartialDependencePlots
 library(pdp)
 
