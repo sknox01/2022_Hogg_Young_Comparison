@@ -73,9 +73,14 @@ ABS 280 - does higher mean more recalcitrant DOC?
 
 All data processing and statistical analyses were conducted using R (R Core Team, 2019). Significant differences in water quality parameters, environmental variables, and fluxes between sites, years and the interaction between site and year were assessed using a two-way ANOVA with Type III Sums of Squares on the rank-transformed data, as ranking can be used to transform data that do not meet the assumptions of normality (ref). Here, each original data value was replaced by its rank, with 1 for the smallest value to N for the largest, where N is the combined data sample size. This rank-based approach is robust to non-normal errors, resistant to outliers, and is effective for many distributions. When comparing differences in variables between sites, years and the interaction between site and year, we only considered the summer period when water quality measurements were available.
 
-Multivariate associations of water quality parameters across sites were analyzed using principal component analysis (PCA). All variables were centered and scaled, and PCA was done using the prcomp function in base R. 
+Multivariate associations of water quality parameters across sites were analyzed using principal component analysis (PCA). All variables were centered and scaled, and PCA was done using the 'prcomp' function in base R. 
 
-To investigate the environmental factors controlling differences in FCH4 across sites, we used a random forest (RF) approach. The RF algorithm introduced by Breiman (2001) is an ensemble method of regression tree. The algorithm creates bootstrapped data sets and then generates independent regression trees using randomly sampled variables at each split node. Then, RF aggregates the prediction results of the individual trees. We generated 500 regression trees for each case using the “randomForest” R package (Liaw & Wiener, 2002). We then used the varImp function to determine the top predictors of FCH4 across sites. The RF algorithm estimates variable importance by permuting a predictor variable and then assessing how much the prediction error increases. As certain water quality parameters were highly correlated (Figure [-@fig-PCA]), we only selected a subset of water quality parameters for the random forest model. To capture the primary differences in water quality parameters between sites, only $SO_{4}^{2-}$, TP, and pH were included in the model [revise]. 
+To investigate the environmental factors controlling differences in FCH4 across sites, we trained random forest (RF) models on daily mean FCH4 using common meteorological and biological drivers, and a subset of water quality parameters. Meteorological variables included daily mean TA, WTD, VPD, u*, and daily GPP was included as the biological predictor. As certain water quality parameters were highly correlated (Figure [-@fig-PCA]), to capture the primary differences in water quality parameters between sites, only $SO_{4}^{2-}$, TP, $NH_{4}^{+}$, $NO_{3}^{-}$ (as (as $NO_{3}^{-}$ & $NO_{2}^{-}$)), and pH were included in the RF analysis.
+The RF algorithm is an ensemble method of regression tree. 
+
+The RF algorithm creates bootstrapped data sets and then generates independent regression trees using randomly sampled variables at each split node. Then, RF aggregates the prediction results of the individual trees. For each tree, a random subset of the predictors (mtry) are selected at each split to minimize overfitting (Breiman 2001). We used an ensemble of 500 trees, and the mtry value was chosen using a threefold cross-validation repeated three times. Any missing values in the predictor data were imputed using medians [CHECK!]. Random forests were fit using the ‘caret’ (Kuhn 2017) and ‘randomForest’ (Liaw and Wiener 2002) packages.We then used the 'varImp' function to determine the top predictors of FCH4 across sites. The RF algorithm estimates variable importance by permuting a predictor variable and then assessing how much the prediction error increases. Finally, Partial Dependence Plots (PDP), generated using the 'pdp' package, were used to investigate the marginal contribution of different predictors on FCH4.
+
+Tigramite - https://jakobrunge.github.io/tigramite/
 
 # Results
 
@@ -112,12 +117,12 @@ WQ <- data.daily.WQ.mean
 knitr::kable(WQ)
 ```
 
-Figure out best figure(s) to use.
+Figure out best figure(s) to use. ALL WQ variables?
 
 ![SO4.](../figures/SO4_bp.png){#fig-SO4}
 
 
-![PCA.](../figures/PCA_WQ.png){#fig-PCA}
+![PCA. CHANGE VAR NAMES](../figures/PCA_WQ.png){#fig-PCA}
 
 ## GHG fluxes
 
@@ -141,6 +146,12 @@ knitr::kable(fluxes_annual)
 
 ## Driver of FCH4 
 
+### Between sites
+
+the RF model explained 80% of observed variance (r^{2}; mtry = 3) in the test data.
+
+![Variable importance.](../figures/VarImp.png){#fig-VarImp}
+
 # Discussion
 
 Notes: 
@@ -153,6 +164,9 @@ Additionally,  thedilution  effect  resulting  from  this  increase  in  waterle
 production   (Gauci   et   al.2004).   A   recent   studyconducted  in  ephemeral  prairie  pothole  wetlands  inSK  by  Pennock  et  al.  (2010)  has  demonstrated  thatCH4emissions  decrease  as  sulfate  (SO42-)  concen-trations  increase.  Rapid  increases  in  CH4emissionsassociated  with  increased  spring  runoff  leading  to
 
 depletion   in   SO42-concentrations   has   also   beendocumented   by   Phipps   (2006)   for   a   permanentwetland  located  in  the  St.  Denis  National  WildlifeArea in Saskatchewan, Canada
+
+Read about P & pH on FCH4
+
 
 # References {.unnumbered}
 

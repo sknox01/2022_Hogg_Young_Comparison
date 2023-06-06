@@ -197,6 +197,8 @@ data.daily <- data %>%
                    TS = mean(TS_2, na.rm = TRUE),
                    TA = mean(TA_1_1_1, na.rm = TRUE),
                    VPD = mean(VPD_1_1_1, na.rm = TRUE),
+                   PA = mean(PA_1_1_1, na.rm = TRUE),
+                   USTAR = mean(USTAR, na.rm = TRUE),
                    SW_IN = mean(SW_IN_1_1_1, na.rm = TRUE)*conv_energy,
                    PPFD_IN = mean(PPFD_IN_1_1_1, na.rm = TRUE),
                    P = sum(P_1_1_1, na.rm = TRUE),
