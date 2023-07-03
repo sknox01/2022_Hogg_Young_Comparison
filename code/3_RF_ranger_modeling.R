@@ -9,6 +9,8 @@ library(vip)
 library(ranger)
 library(caret)
 library(corrr)
+library(scales)
+library(ggpubr)
 
 # CHANGE UNITS TO nmol m-2 s-1
 # Load data
@@ -26,7 +28,8 @@ ggplotly(ggplot()+
 
 # from https://github.com/yeonukkim/EC_FCH4_gapfilling
 # Select variables for the model - REDO WITH 2022 DATA! Think more about LE, USTAR and Wind direction
-predictors <- c("FCH4","TA","WTD","VPD","USTAR","GPP_PI_F_NT_gC","SO4_pred_interp","TP_interp")
+predictors <- c("FCH4","TA","WTD","VPD","USTAR","GPP_PI_F_NT_gC","SO4_pred_interp","TP_interp", "DOC_interp",
+"NO3_NO2_N_interp","NH4_N_interp","pH_interp")
 # predictors <- c("FCH4","TA","WTD","VPD","USTAR","GPP_PI_F_NT_gC","SO4_pred_interp","TP_interp","pH_interp","year")
 
 data.daily.model <- na.omit(data.daily[,c(predictors,"site","year","datetime")]) # Remove all missing data
@@ -104,10 +107,21 @@ rf_model <- train(
 rf_model$bestTune
 rf_model$finalModel
 
-p <- vip(rf_model$finalModel)+xlab('')+theme_classic()
-p
+vi <- as.data.frame(importance(rf_model$finalModel))
+vi <- tibble::rownames_to_column(vi)
+colnames(vi) <- c("Variable","Importance")
 
-ggsave("figures/VarImp.png", p,units = "cm",height = 7, width = 6, dpi = 320)
+#scale values in 'sales' column to be between 0 and 1
+vi$Importance <- rescale(vi$Importance)*100
+
+# Sort in ascending order
+vi <- vi %>% arrange(-Importance)  
+
+p_Young_Hogg <- ggplot(vi, aes(reorder(Variable, Importance, sum), Importance)) +
+  geom_col()+ coord_flip()+theme_classic()+xlab('')
+p_Young_Hogg
+ 
+ggsave("figures/VarImp_Hogg_Young.png", p,units = "cm",height = 7, width = 6, dpi = 320)
 
 # https://rpubs.com/vishal1310/QuickIntroductiontoPartialDependencePlots
 
@@ -163,10 +177,21 @@ rf_model_young <- train(
 rf_model_young$bestTune
 rf_model_young$finalModel
 
-p <- vip(rf_model_young$finalModel)+xlab('')+theme_classic()
-p
+vi <- as.data.frame(importance(rf_model_young$finalModel))
+vi <- tibble::rownames_to_column(vi)
+colnames(vi) <- c("Variable","Importance")
 
-ggsave("figures/VarImp.png", p,units = "cm",height = 7, width = 6, dpi = 320)
+#scale values in 'sales' column to be between 0 and 1
+vi$Importance <- rescale(vi$Importance)*100
+
+# Sort in ascending order
+vi <- vi %>% arrange(-Importance)  
+
+p_Young <- ggplot(vi, aes(reorder(Variable, Importance, sum), Importance)) +
+  geom_col()+ coord_flip()+theme_classic()+xlab('')
+p_Young
+
+ggsave("figures/VarImp_Young.png", p,units = "cm",height = 7, width = 6, dpi = 320)
 
 # PDP
 
@@ -209,10 +234,21 @@ rf_model_Hogg <- train(
 rf_model_Hogg$bestTune
 rf_model_Hogg$finalModel
 
-p <- vip(rf_model_Hogg$finalModel)+xlab('')+theme_classic()
-p
+vi <- as.data.frame(importance(rf_model_Hogg$finalModel))
+vi <- tibble::rownames_to_column(vi)
+colnames(vi) <- c("Variable","Importance")
 
-ggsave("figures/VarImp.png", p,units = "cm",height = 7, width = 6, dpi = 320)
+#scale values in 'sales' column to be between 0 and 1
+vi$Importance <- rescale(vi$Importance)*100
+
+# Sort in ascending order
+vi <- vi %>% arrange(-Importance)  
+
+p_Hogg <- ggplot(vi, aes(reorder(Variable, Importance, sum), Importance)) +
+  geom_col()+ coord_flip()+theme_classic()+xlab('')
+p_Hogg
+
+ggsave("figures/VarImp_Hogg.png", p,units = "cm",height = 7, width = 6, dpi = 320)
 
 # PDP
 
@@ -235,3 +271,9 @@ plot.TP_interp.Hogg
 par.DOC_interp.Hogg<- partial(rf_model_Hogg, pred.var = c("DOC_interp"),  train = ML.df.Hogg, chull = TRUE)
 plot.DOC_interp.Hogg<- autoplot(par.DOC_interp.Hogg, contour = TRUE)
 plot.DOC_interp.Hogg 
+
+# Save variable importance scores in one figure
+p <- ggarrange(p_Hogg,p_Young, p_Young_Hogg,ncol = 3, nrow = 1)
+p
+
+ggsave("figures/VarImp_all.png", p,units = "cm",height = 12, width = 12, dpi = 320)

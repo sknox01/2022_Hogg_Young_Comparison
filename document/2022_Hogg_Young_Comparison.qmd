@@ -75,52 +75,7 @@ Multivariate associations of water quality parameters across sites were analyzed
 
 To investigate the environmental factors controlling differences in FCH4 across sites, we trained random forest (RF) models on daily mean FCH4 using common meteorological and biological drivers, and a subset of water quality parameters. Meteorological variables included daily mean TA, WTD, VPD, u*, and daily GPP was included as the biological predictor. As certain water quality parameters were highly correlated (Figure [-@fig-PCA]), to capture the primary differences in water quality parameters between sites, only $SO_{4}^{2-}$, TP, $NH_{4}^{+}$, $NO_{3}^{-}$ (as (as $NO_{3}^{-}$ & $NO_{2}^{-}$)), and pH were included in the RF analysis.
 
-The RF algorithm creates bootstrapped data sets and then generates independent regression trees using randomly sampled variables at each split node. Then, RF aggregates the prediction results of the individual trees. Random forests were fit using the ‘caret’ (Kuhn 2017) and ‘ranger’ (R (Wright & Ziegler, 2017; R Core Team, 2019) packages. Similar to Knox et al. (2021), each RF was trained on all available data from both sites (i.e., the dataset was not split into training and test data), and out-of-bag data were used for hyperparameter tuning. The inclusion of all available data is justified as our goal was to assess dominant predictors of FCH4 across sites rather than develop a predictive model that can be applied to new conditions, and 2) RF is already robust to outliers (Zhang & Lu, 2012). We used an ensemble of 500 trees, and hyperparameter tuning was performed for mtry (the number of predictors randomly sampled at each devision node) and min.node.size. Predictors were ranked using permutation importance, which avoids bias from other approaches (Strobl et al., 2007), and importance values were scaled. Additionally, Partial Dependence Plots (PDP), generated using the 'pdp' package, were used to investigate the marginal contribution of different predictors on FCH4.
-
-Used correlation and RF to assess dominant predictors across sites
-
-However, as we're interested in looking at differences in drivers between sites, we used PCMCI (which can't be used across sites)
-
-TRANSFER ENTROPY INSTEAD?
-
-Notes: Estimating causal networks in biosphere–atmosphere interactionwith the PCMCI approach
-
-The study of biosphere–atmosphere interactions using ob-servations  typically  relies  on  correlative  approaches,  or  isbased  on  model  data,  i.e.  requires  a  priori  knowledge.  Inrecent  years,  a  new  branch  in  statistics  aiming  for  causalinference  from  empirical  data  has  experienced  substantialprogress.
-
-Ecological and climate data are often time-ordered. Thisproperty  can  be  exploited  to  construct  time  series  graph Hence,  this  method  couldbe potentially of high relevance for learning the causal de-pendency structure underlying biosphere–atmosphere inter-actions
-
-In this study, we explore the potential of PCMCI for disen-tangling and quantifying interactions and feedbacks betweenterrestrial biosphere state and fluxes and meteorological vari-ables
-
-To  foster  its  understanding,  a  fundamental  questionis how these variables causally depend on each other. 
-
-Graphical causal models (Spirtes et al.,2001) provide a framework to represent and identify causalrelations based on conditional independence relations in datastreams of this kind. In the case of an ecological monitoringsite as described here, we can exploit the temporal informa-tion of the observations for identifying a time series graph asa type of graphical model (Runge, 2018)
-
-o come to a causal interpretation, itis important to exclude dependencies between two variablesthat are due to common drivers (Xit−τ1←Xst−τ2→Xjt) orindirect  paths  (Xit−τ2→Xst−τ1→Xjt). 
-
- How-ever, manually selecting conditions is not desirable when theunderlying dependence structure is unknown, which is whyideally the conditioning set is identified automatically.PCMCI addresses this issue by reducing the set of con-ditionsSprior to quantifying the dependence between twovariables.  The  two-step  approach  utilises  a  variant  of  thePC algorithm (Spirtes and Glymour, 1991) and the momen-tary conditional independence measure (MCI) (Runge et al.,2019b). 
-
-Functional convergence of biosphere–atmosphere interactionsin response to meteorological conditions
-
-Understanding  how  biosphere–atmosphere fluxes interact and how they causally depend onthe short-term meteorological and long-term climate condi-tions  is  crucial  for  building  predictive  terrestrial-biospheremodels (Detto et al., 2012; Green et al., 2017)
-
- firstly, we perform causaldiscovery by PCMCI at each eddy covariance site and sea-son.  
- 
- PCMCI is tailored to estimate time-lagged de-pendencies from potentially high-dimensional and autocor-related multivariate time series
- 
- The link strength is here givenby the MCI partial correlation. In short, the MCI value givesan estimate of dependence between two time series, one po-tentially lagged, with the influence of other lagged drivers in-cluding autocorrelation removed, yielding a better interpreta-tion of the strength of a causal mechanism than the commonPearson correlation. 
- 
- As a particular partialcorrelation, the MCI value is independent of the variables’mean value and is normalised in [−1, 1] and can, hence, becompared between variable pairs with different units of mea-surement.
- 
- . Based on findings in Krichet al. (2020), we subtracted a smoothed seasonal mean fromeach variable to remove the common driver influence of theseasonal cycle that would yield spurious dependencies
- 
- We estimated networksin sliding windows of 3 months, taking the centre month asthe time index of each network.
- 
- Thoughts:
- -Daily & remove seasonal trend
- -3 month period
- 
- https://github.com/ckrich/Functional-convergence-of-biosphere-atmosphere-interactions-in-response-to-meteorology/blob/master/1-CreateDataframe.ipynb
- 
+The RF algorithm creates bootstrapped data sets and then generates independent regression trees using randomly sampled variables at each split node. Then, RF aggregates the prediction results of the individual trees. Random forests were fit using the ‘caret’ (Kuhn 2017) and ‘ranger’ (R (Wright & Ziegler, 2017; R Core Team, 2019) packages. Similar to Knox et al. (2021), each RF was trained on all available data from both sites (i.e., the dataset was not split into training and test data), and out-of-bag data were used for hyperparameter tuning. The inclusion of all available data is justified as our goal was to assess dominant predictors of FCH4 across sites rather than develop a predictive model that can be applied to new conditions, and 2) RF is already robust to outliers (Zhang & Lu, 2012). We used an ensemble of 500 trees, and hyperparameter tuning was performed for mtry (the number of predictors randomly sampled at each devision node) and min.node.size. Predictors were ranked using permutation importance, which avoids bias from other approaches (Strobl et al., 2007), and importance values were scaled for comparison between sites (Knox et al., 2021). Additionally, Partial Dependence Plots (PDP), generated using the 'pdp' package, were used to investigate the marginal contribution of different predictors on FCH4.
  
 # Results
 
@@ -188,10 +143,10 @@ knitr::kable(fluxes_annual)
 
 ### Between sites
 
-the RF model explained 83% of observed variance ($r^{2}$) when evaluated against out-of-bag data. Based on the variable importance rankings, $SO_{4}^{2-}$ concentration was the dominant predictor of FCH4 (Figure [-@fig-VarImp]), indicating that the significant difference in $SO_{4}^{2-}$ concentration across sites (Table [-@tbl-WQ]) was the dominant factor explaining the significant differences in FCH4 across sites. MORE ON THE OTHER VARIABLES BUT WAIT FOR THE FINAL ANALYSIS.    
+Across sites, the RF model explained 83% of observed variance ($r^{2}$) when evaluated against out-of-bag data. Based on the variable importance rankings, $SO_{4}^{2-}$ concentration was the dominant predictor of FCH4 (Figure [-@fig-VarImp]a), indicating that the significant difference in $SO_{4}^{2-}$ concentration across sites (Table [-@tbl-WQ]) was the dominant factor explaining the significant differences in FCH4 across sites. However, other water quality variables, including DOC, pH and NO3/NO2 along with WTD were also in the top 5 top predictors of FCH4 across sites.
 
-
-![Variable importance.](../figures/VarImp.png){#fig-VarImp}
+Within sites, water quality parameters were also the dominant predictors of FCH4 at Hogg and Young, with $SO_{4}^{2-}$ being the top predictor at Hogg (Figure [-@fig-VarImp]c) and TP being the dominant predictor at Young (Figure [-@fig-VarImp]b). While water quality variables and WTD were the top predictors at Hogg and across sites, TA and GPP were also among the top predictors at Young. 
+![Variable importance.](../figures/VarImp_all.png){#fig-VarImp}
 
 # Discussion
 
