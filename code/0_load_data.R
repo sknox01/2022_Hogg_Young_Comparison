@@ -161,7 +161,7 @@ data.Young$site <- "Young"
 # Replace FCH4_f with FCH4_gf_RF
 #df.Young <- data.Young[,c('site','DATE','GPP_f', 'Reco','pot_rad','SWIN_1_1_1','VPD.x','air_p_mean','P_RAIN_1_1_1','TA_1_1_1','TS_1_1_1','TS_2_1_1','TS_3_1_1','WTD','LE_f','NEE_uStar_f','FCH4_f','FCH4',"pH_interp","Specific_cond_interp","DOC_interp","TDN_interp","NO3_NO2_N_interp","NH4_N_interp","DRP_interp","TDP_interp","TP_interp","ABS_280nm_interp","SO4_interp")]
 
-#Saving the data tp csv (for Matt)
+#Saving the data to csv (for Matt)
 #write.table(df.Hogg, file = here("output",'Hogg.csv'),row.names=FALSE,sep='\t') 
 #write.table(df.Young, file = here("output",'Young.csv'),row.names=FALSE,sep='\t') 
 
@@ -192,7 +192,7 @@ data.daily <- data %>%
                    Reco_PI_F_NT_gC = mean(Reco_PI_F_NT, na.rm = TRUE)*conv_co2,
                    Reco_PI_F_DT_gC = mean(Reco_PI_F_DT, na.rm = TRUE)*conv_co2,
                    FCH4_F_gC = mean(FCH4_PI_F_RF, na.rm = TRUE)*conv_ch4,
-                   FCH4_gC = mean(FCH4, na.rm = TRUE)*conv_ch4,
+                   FCH4 = mean(FCH4, na.rm = TRUE),
                    WTD = mean(WTD, na.rm = TRUE),
                    TS = mean(TS_2, na.rm = TRUE),
                    TA = mean(TA_1_1_1, na.rm = TRUE),

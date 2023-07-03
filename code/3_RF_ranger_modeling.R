@@ -7,33 +7,41 @@ library(Metrics)
 library(pdp)
 library(vip)
 library(ranger)
+library(caret)
+library(corrr)
 
+# CHANGE UNITS TO nmol m-2 s-1
 # Load data
-load(here("output/daily_data.Rda"))
+load(here("output/daily_data.Rda")) # Average only for days with more than 50% of data
 
 # plot daily data
 ggplotly(ggplot()+
-           geom_point(data = data.daily, aes(x = datetime,y = FCH4_gC,color = site)))
+           geom_point(data = data.daily, aes(x = datetime,y = FCH4,color = site)))
 
 ggplotly(ggplot()+
            geom_point(data = data.daily, aes(x = datetime,y = NO3_NO2_N_interp,color = site)))
 
 ggplotly(ggplot()+
-           geom_point(data = data.daily, aes(x = TP_interp,y = FCH4_gC,color = site)))
+           geom_point(data = data.daily, aes(x = USTAR,y = FCH4,color = site)))
 
 # from https://github.com/yeonukkim/EC_FCH4_gapfilling
-# Select variables for the model - REDO WITH 2022 DATA! Add LE here? Or remove from Tigramite analysis?
-predictors <- c("FCH4_gC","TA","WTD","VPD","USTAR","GPP_PI_F_NT_gC","SO4_pred_interp","TP_interp","DOC_interp","NH4_N_interp","NO3_NO2_N_interp","pH_interp")
-# predictors <- c("FCH4_gC","TA","WTD","VPD","USTAR","GPP_PI_F_NT_gC","SO4_pred_interp","TP_interp","pH_interp","year")
+# Select variables for the model - REDO WITH 2022 DATA! Think more about LE, USTAR and Wind direction
+predictors <- c("FCH4","TA","WTD","VPD","USTAR","GPP_PI_F_NT_gC","SO4_pred_interp","TP_interp")
+# predictors <- c("FCH4","TA","WTD","VPD","USTAR","GPP_PI_F_NT_gC","SO4_pred_interp","TP_interp","pH_interp","year")
 
 data.daily.model <- na.omit(data.daily[,c(predictors,"site","year","datetime")]) # Remove all missing data
 data.daily.model$site <- as.factor(data.daily.model$site)
 data.daily.model$year <- as.factor(data.daily.model$year)
 
 ggplotly(ggplot()+
-           geom_point(data = data.daily.model, aes(x = datetime,y = FCH4_gC,color = site)))
+           geom_point(data = data.daily.model, aes(x = datetime,y = SO4_pred_interp,color = site)))
 
-# Build random forest model
+# Correlation plot
+# https://www.datanovia.com/en/blog/easy-correlation-matrix-analysis-in-r-using-corrr-package/
+res.cor <- correlate(data.daily.model[,predictors])
+res.cor %>% network_plot(min_cor = .6)
+
+# Build random forest model ALL data
 ML.df <- data.daily.model[,predictors]
 
 # RF model from Knox et al. GCB (2021)
@@ -83,7 +91,7 @@ myControl <- trainControl(
 ## train rf 
 set.seed(500)
 rf_model <- train(
-  FCH4_gC ~ ., 
+  FCH4 ~ ., 
   data = ML.df,
   num.trees = 500, # start at 10xn_feat, maintain at 100 below 10 feat
   method = 'ranger',
@@ -94,21 +102,9 @@ rf_model <- train(
 )
 
 rf_model$bestTune
+rf_model$finalModel
 
-p <- vip(rf_model_final)+xlab('')+theme_classic()
-p
-
-# Get performance for final model
-set.seed(500)
-rf_model_final = ranger(formula = FCH4_gC ~ ., data = ML.df,
-            num.trees = 500,
-            mtry = 4,
-            min.node.size = 5,
-            splitrule = "variance",
-            importance = 'permutation') 
-
-# variable importance - rename variable names
-p <- vip(rf_model_final)+xlab('')+theme_classic()
+p <- vip(rf_model$finalModel)+xlab('')+theme_classic()
 p
 
 ggsave("figures/VarImp.png", p,units = "cm",height = 7, width = 6, dpi = 320)
@@ -148,3 +144,94 @@ plot.DOC_interp
 
 # For PDP and ICE: These plots can be used in parallel to understand the predictions’ overall trends and check problematic individual cases. Because PDPs show the output changes on an aggregate level, the more minor variations of particular instances are lost. Therefore it is best to look at both variations
 
+# Build random forest model Young
+ML.df.Young <- data.daily.model[(data.daily.model$site == 'Young'),predictors]
+
+## train rf 
+set.seed(500)
+rf_model_young <- train(
+  FCH4 ~ ., 
+  data = ML.df.Young,
+  num.trees = 500, # start at 10xn_feat, maintain at 100 below 10 feat
+  method = 'ranger',
+  trControl = myControl,
+  tuneGrid = tgrid,
+  importance = 'permutation',  ## or 'impurity'
+  metric = "MAE" ## or 'rmse'
+)
+
+rf_model_young$bestTune
+rf_model_young$finalModel
+
+p <- vip(rf_model_young$finalModel)+xlab('')+theme_classic()
+p
+
+ggsave("figures/VarImp.png", p,units = "cm",height = 7, width = 6, dpi = 320)
+
+# PDP
+
+par.TA.young<- partial(rf_model_young, pred.var = c("TA"), train = ML.df.Young, chull = TRUE)
+plot.TA.young<- autoplot(par.TA.young, contour = TRUE)
+plot.TA.young
+
+par.WTD.young<- partial(rf_model_young, pred.var = c("WTD"),  train = ML.df.Young, chull = TRUE)
+plot.WTD.young<- autoplot(par.WTD.young, contour = TRUE)
+plot.WTD.young
+
+par.SO4_pred_interp.young<- partial(rf_model_young, pred.var = c("SO4_pred_interp"),  train = ML.df.Young, chull = TRUE)
+plot.SO4_pred_interp.young<- autoplot(par.SO4_pred_interp.young, contour = TRUE)
+plot.SO4_pred_interp.young
+
+par.TP_interp.young<- partial(rf_model_young, pred.var = c("TP_interp"),  train = ML.df.Young, chull = TRUE)
+plot.TP_interp.young<- autoplot(par.TP_interp.young, contour = TRUE)
+plot.TP_interp.young 
+
+par.DOC_interp.young<- partial(rf_model_young, pred.var = c("DOC_interp"),  train = ML.df.Young, chull = TRUE)
+plot.DOC_interp.young<- autoplot(par.DOC_interp.young, contour = TRUE)
+plot.DOC_interp.young 
+
+# Build random forest model Hogg
+ML.df.Hogg <- data.daily.model[(data.daily.model$site == 'Hogg'),predictors]
+
+## train rf 
+set.seed(500)
+rf_model_Hogg <- train(
+  FCH4 ~ ., 
+  data = ML.df.Hogg,
+  num.trees = 500, # start at 10xn_feat, maintain at 100 below 10 feat
+  method = 'ranger',
+  trControl = myControl,
+  tuneGrid = tgrid,
+  importance = 'permutation',  ## or 'impurity'
+  metric = "MAE" ## or 'rmse'
+)
+
+rf_model_Hogg$bestTune
+rf_model_Hogg$finalModel
+
+p <- vip(rf_model_Hogg$finalModel)+xlab('')+theme_classic()
+p
+
+ggsave("figures/VarImp.png", p,units = "cm",height = 7, width = 6, dpi = 320)
+
+# PDP
+
+par.TA.Hogg<- partial(rf_model_Hogg, pred.var = c("TA"), train = ML.df.Hogg, chull = TRUE)
+plot.TA.Hogg<- autoplot(par.TA.Hogg, contour = TRUE)
+plot.TA.Hogg
+
+par.WTD.Hogg<- partial(rf_model_Hogg, pred.var = c("WTD"),  train = ML.df.Hogg, chull = TRUE)
+plot.WTD.Hogg<- autoplot(par.WTD.Hogg, contour = TRUE)
+plot.WTD.Hogg
+
+par.SO4_pred_interp.Hogg<- partial(rf_model_Hogg, pred.var = c("SO4_pred_interp"),  train = ML.df.Hogg, chull = TRUE)
+plot.SO4_pred_interp.Hogg<- autoplot(par.SO4_pred_interp.Hogg, contour = TRUE)
+plot.SO4_pred_interp.Hogg
+
+par.TP_interp.Hogg<- partial(rf_model_Hogg, pred.var = c("TP_interp"),  train = ML.df.Hogg, chull = TRUE)
+plot.TP_interp.Hogg<- autoplot(par.TP_interp.Hogg, contour = TRUE)
+plot.TP_interp.Hogg 
+
+par.DOC_interp.Hogg<- partial(rf_model_Hogg, pred.var = c("DOC_interp"),  train = ML.df.Hogg, chull = TRUE)
+plot.DOC_interp.Hogg<- autoplot(par.DOC_interp.Hogg, contour = TRUE)
+plot.DOC_interp.Hogg 
