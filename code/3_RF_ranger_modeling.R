@@ -15,6 +15,7 @@ library(ggpubr)
 # Load data
 load(here("output/daily_data.Rda")) # Average only for days with more than 50% of data
 
+# Only consider fluxes with more than 
 # plot daily data
 ggplotly(ggplot()+
            geom_point(data = data.daily, aes(x = datetime,y = FCH4,color = site)))
