@@ -75,7 +75,7 @@ plots_cum[[1]] <- plots_cum[[1]]+geom_hline(yintercept=0, linetype="dashed")
 p1 <- ggarrange(plotlist=plots_cum,ncol = 1,
                 nrow = 6, common.legend = TRUE,hjust = -3.5) # FIX UP FIGURE
 p1
-ggsave("figures/flux_cum_sum.png", p1,units = "cm",height = 12, width = 12, dpi = 320)
+#ggsave("figures/flux_cum_sum.png", p1,units = "cm",height = 12, width = 12, dpi = 320)
 
 # Annual sums
 data.site.annual <- data.site %>% group_by(site) %>% 

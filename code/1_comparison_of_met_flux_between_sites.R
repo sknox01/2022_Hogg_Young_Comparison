@@ -27,8 +27,7 @@ library(rstatix)
 library(car)
 library(ggplotify)
 
-# CLEAN UP CODE AND CREATE FUNCTIONS!!
-# Clean up figures!
+# CREATE FUNCTIONS!
 
 # Load data
 load(here("output/daily_data.Rda"))
@@ -101,8 +100,8 @@ p <- fviz_pca_biplot(res.pca, repel = TRUE,
                      invisible = "quali",
                      labelsize = 2,
                      title = "") + 
-  geom_hline(yintercept=0, color='gray70', size=0.3,linetype="dashed") +
-  geom_vline(xintercept=0, color='gray70', size=0.3,linetype="dashed") + 
+  geom_hline(yintercept=0, color='gray70', linewidth=0.3,linetype="dashed") +
+  geom_vline(xintercept=0, color='gray70', linewidth=0.3,linetype="dashed") + 
   theme(text = element_text(size = 8),legend.position="bottom")+
   labs(x = paste(paste("PC 1 (", round(var_explained[1]*100,1)),"%)", sep = ""), y = paste(paste("PC 2 (", round(var_explained[2]*100,1)),"%)", sep = ""))
 p
@@ -170,6 +169,7 @@ for (i in 1:nvars){
 }
 
 p <- ggarrange(plotlist=plots_bp)
+p
 
 # Check if it should be a t-test or Wilcoxon test
 # The results of these experiments indicate that Student’s t-test should definitely be avoided 
@@ -185,7 +185,7 @@ for (i in 1:nvars){
   W_test[[i]] <- wilcox.test(na.omit(data.daily)[[var]]~na.omit(data.daily)[["site"]])
 }
 
-ggsave("figures/WQ_bp.png", p,units = "cm",height = 8, width = 12, dpi = 320)
+ggsave("figures/SI/WQ_bp_single_year.png", p,units = "cm",height = 8, width = 12, dpi = 320)
 
 # For sites with variables for both years 
 
@@ -316,6 +316,33 @@ for (i in 1:nvars){
   plots_hv[[i]] <- p1
 }
 
+# Create empty plot
+plots_bp <- plot.new()
+
+df <- na.omit(data.daily[,c('site','year',vars)])
+df$site <- as.factor(df$site)
+df$year <- as.factor(df$year)
+
+# Loop through each variables - CHECK NA.OMIT once we have all the data
+for (i in 1:nvars){
+  
+  var <- vars[[i]]
+  
+  p1 <- ggboxplot(
+    df, x = 'site', y = var, fill = 'year',
+    palette = colors_sites[c(2,9)],
+    lwd=0.2,
+    outlier.size=0.3
+  )+theme(text = element_text(size = 6))
+  p1 
+  
+  plots_bp[[i]] <- p1
+}
+
+p1 <- ggarrange(plotlist=plots_bp,common.legend = TRUE)
+
+ggsave("figures/SI/WQ_bp_all_years.png", p1,units = "cm",height = 8, width = 12, dpi = 320)
+
 # ------------------------------------------------------------------------------------------------
 # Environmental variables - daily data 
 
@@ -428,7 +455,7 @@ for (i in 1:nvars){
 
 p1 <- ggarrange(plotlist=plots_bp)
 
-ggsave("figures/Met_bp.png", p1,units = "cm",height = 8, width = 12, dpi = 320)
+#ggsave("figures/Met_bp.png", p1,units = "cm",height = 8, width = 12, dpi = 320)
 
 # Using the Kruskal-Wallis Test, we can decide whether the population distributions are identical without assuming them to follow the normal distribution.
 # https://www.cfholbert.com/blog/nonparametric_two_way_anova/
@@ -508,17 +535,21 @@ for (i in 1:nvars){
 }
 
 # ------------------------------------------------------------------------------------------------
-# Flux variables - daily data 
+# Flux variables - daily data (gap-filled)
+
+# Convert gC to mgC
 data.daily$FCH4_mgC <- data.daily$FCH4_gC*1000
+
 # Plot of time series
-vars <- c("FC_gC","FCH4_mgC","GPP_PI_F_DT_gC","GPP_PI_F_NT_gC","Reco_PI_F_DT_gC","Reco_PI_F_NT_gC")
+#vars <- c("FC_gC","FCH4_mgC","GPP_PI_F_DT_gC","GPP_PI_F_NT_gC","Reco_PI_F_DT_gC","Reco_PI_F_NT_gC")
+vars <- c("FC_gC","FCH4_mgC","GPP_PI_F_NT_gC","Reco_PI_F_NT_gC")
 nvars <- length(vars)
 plots_ts <- plot.new()
 ylabel <- c(expression(paste("FC ", "(gC ","m"^"-2", " d"^"-1",")")),expression(paste("FCH4 ", "(mgC ","m"^"-2", " d"^"-1",")")),
-            expression(paste("GPP DT ", "(gC ","m"^"-2", " d"^"-1",")")),expression(paste("GPP NT ", "(gC ","m"^"-2", " d"^"-1",")")),
-            expression(paste("RECO DT ", "(gC ","m"^"-2", " d"^"-1",")")),expression(paste("RECO NT ", "(gC ","m"^"-2", " d"^"-1",")")))
-subplot_label <- c("(a)","(b)","(c)","(d)","(e)","(f)")
-ypos <- c(10,200,10,10,10,10)
+            expression(paste("GPP ", "(gC ","m"^"-2", " d"^"-1",")")),
+            expression(paste("RECO ", "(gC ","m"^"-2", " d"^"-1",")")))
+subplot_label <- c("(a)","(b)","(c)","(d)")
+ypos <- c(10,200,10,10)
 # Loop through each variables
 for (i in 1:(nvars)){
   
@@ -536,29 +567,9 @@ for (i in 1:(nvars)){
 }
 plots_ts[[1]] <- plots_ts[[1]]+geom_hline(yintercept=0, linetype="dashed")
 p1 <- ggarrange(plotlist=plots_ts,ncol = 1,
-                nrow = 6, common.legend = TRUE,hjust = -3.5) # FIX UP FIGURE
+                nrow = 4, common.legend = TRUE,hjust = -3.5) 
 p1
 ggsave("figures/flux_ts.png", p1,units = "cm",height = 12, width = 12, dpi = 320)
-
-# Focus on GS for now (use only data when WQ data is available)
-# use the period of June 1 to Oct 15 which is the period common to both sites for both years where WQ is also available
-ind_GS <- which(((data.daily$datetime <"2021-06-01 UTC" | data.daily$datetime >"2021-10-15 UTC") & data.daily$year == 2021)|
-                  ((data.daily$datetime <"2022-06-01 UTC" | data.daily$datetime > "2022-10-15 UTC") & data.daily$year == 2022))
-
-data.daily.GS <- data.daily
-data.daily.GS[ind_GS,!names(data.daily.GS) %in% c("year","site","datetime")] <- NA
-
-data.annual.flux.GS <- data.daily.GS %>% # Compare results in using 30 min data. Why aren't they exactly the same....
-  group_by(site,year) %>%
-  dplyr::summarize(FC_gC = sum(FC_gC,na.rm = T),
-                   FCH4_gC = sum(FCH4_gC,na.rm = T),
-                   FCH4_gC = sum(FCH4_gC,na.rm = T),
-                   GPP_PI_F_DT_gC = sum(GPP_PI_F_DT_gC,na.rm = T),
-                   GPP_PI_F_NT_gC = sum(GPP_PI_F_NT_gC,na.rm = T),
-                   Reco_PI_F_DT_gC = sum(Reco_PI_F_DT_gC,na.rm = T),
-                   Reco_PI_F_NT_gC = sum(Reco_PI_F_NT_gC,na.rm = T))
-
-save(data.annual.flux.GS,file="output/daily_Flux_mean.Rda") 
 
 # Compare partitioning approaches
 df.Hogg <- data.daily.GS[which(data.daily.GS$site == "Hogg"),]
@@ -594,6 +605,14 @@ aov.rnk <- df.partitioning.Hogg%>%aov(
 anova.rnk <- Anova(aov.rnk, type = 'III') # Really similar to regular anova below!
 
 # GPP & RECO calculated using the different partitioning approaches. Make sure to test BOTH in all analyses.
+
+# Focus on GS for now (use only data when WQ data is available)
+# use the period of June 1 to Oct 15 which is the period common to both sites for both years where WQ is also available
+ind_GS <- which(((data.daily$datetime <"2021-06-01 UTC" | data.daily$datetime >"2021-10-15 UTC") & data.daily$year == 2021)|
+                  ((data.daily$datetime <"2022-06-01 UTC" | data.daily$datetime > "2022-10-15 UTC") & data.daily$year == 2022))
+
+data.daily.GS <- data.daily
+data.daily.GS[ind_GS,!names(data.daily.GS) %in% c("year","site","datetime")] <- NA
 
 # Specify variables (only one year for each of these at the moment)
 
@@ -656,7 +675,7 @@ for (i in 1:nvars){
 
 p1 <- ggarrange(plotlist=plots_bp)
 
-ggsave("figures/flux_bp.png", p1,units = "cm",height = 8, width = 12, dpi = 320)
+# ggsave("figures/flux_bp.png", p1,units = "cm",height = 8, width = 12, dpi = 320)
 
 # Using the Kruskal-Wallis Test, we can decide whether the population distributions are identical without assuming them to follow the normal distribution.
 # https://www.cfholbert.com/blog/nonparametric_two_way_anova/
@@ -734,4 +753,3 @@ for (i in 1:nvars){
   p1 <- as.ggplot(~plot(aov.rnk[[i]], 1, main = paste("Rank-Transformed ",var,sep="")))
   plots_hv[[i]] <- p1
 }
-

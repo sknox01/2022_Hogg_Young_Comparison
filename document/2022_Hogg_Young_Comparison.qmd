@@ -55,9 +55,15 @@ MBPPW1, located at 50.3623˚N, -100.20242˚W, is an isolated cropland marsh in t
 
 MBPPW2, located at 50.3705˚N, -100.5339˚W, is an isolated grassland marsh about 24 km East of MBPPW1. However, this site is much more heterogeneous than MBPPW1 and is characterized by a combination of open water and emergent vegetation. Large mats of submersed macrophytes are found near the open water surface during the growing season, and the emergent vegetation is dominated by Typha spp. This site is characterized by lower sulfate concentrations.
 
+PICS of site and footprint
+
+CLIMATE NORMALS
+
 ## Eddy covariance measurements
 
 ## Gap-filling, NEE partitioning, and annual budget computation
+
+net GHG budget
 
 ## Supporting measurements
 
@@ -121,10 +127,11 @@ Figure out best figure(s) to use. ALL WQ variables?
 
 ## GHG fluxes
 
-Both wetland sites were net $CO_{2}$ sources over the course of the growing season, although net $CO_{2}$ update was lower at Young relative to Hogg due to lower GPP at Young (Figure [-@fig-fluxes]). Annually, this resulted in in Hogg being a net $CO_{2}$ sink in 2021-2022, taking up 34 gC $m^{-2}$ $yr^{-1}$, while Young was a net $CO_{2}$ source of 57 gC $m^{-2}$ $yr^{-1}$. Cumulative annual GPP at Hogg was 31% greater than Young, while differences in annual Reco were smaller between sites (~10%) (Table [-@tbl-fluxes]).
+Both wetland sites were net $CO_{2}$ sinks over the course of the growing season, although net $CO_{2}$ uptake was lower at Young relative to Hogg due to lower GPP at Young (Figure [-@fig-fluxes]). Annually, this resulted in in Hogg being a net $CO_{2}$ sink in 2021-2022, taking up 34 gC $m^{-2}$ $yr^{-1}$, while Young was a net $CO_{2}$ source of 57 gC $m^{-2}$ $yr^{-1}$. Cumulative annual GPP at Hogg was 31% greater than Young, while differences in annual Reco were smaller between sites (~10%) (Table [-@tbl-fluxes]).
 
 Relative difference in $CH_{4}$ fluxes were even larger between sites (Figure [-@fig-fluxes]; Table [-@tbl-fluxes]). While Young showed a strong seasonal cycle in FCH4 over the course of the year, with daily emissions exceeding >100 mgC $m^{-2}$ $d^{-1}$ during the growing season, emissions at Hogg hovered near zero across the measurement period. As such, cumulative annual FCH4 at Young was >6 time larger at Young relative to Hogg (7.6 versus 1.12 gC $m^{-2}$ $yr^{-1}$, respectively) (Table [-@tbl-fluxes]).
 
+Combining CO2 and CH4 fluxes, Hogg was GHG neutral, while Young had a positive radiative balance (Table [-@tbl-fluxes]) on a 100-year time scale. 20 & 500 year time scale??
 
 ![Fluxes.](../figures/flux_ts.png){#fig-fluxes}
 
@@ -139,16 +146,44 @@ fluxes_annual <- data.site.annual.all
 knitr::kable(fluxes_annual)
 ```
 
-## Driver of FCH4 
+## Predictors of FCH4 
 
-### Between sites
+Across sites, the RF model explained 83% [insert code for this] of observed variance ($r^{2}$) when evaluated against out-of-bag (OOB) data. Based on the variable importance rankings, $SO_{4}^{2-}$ concentration was the dominant predictor of FCH4 (Figure [-@fig-VarImp]a), indicating that the significant difference in $SO_{4}^{2-}$ concentration across sites (Table [-@tbl-WQ]) was the dominant factor explaining the differences in FCH4 across sites. The partial dependence plot for the RF model indicates that FCH4 is strongly inhibited below $SO_{4}^{2-}$ concentrations greater than ~500 UNITS when the effects of other factors were excluded Figure [-@fig-pdp]a). In addition $SO_{4}^{2-}$, other water quality variables, including DOC, pH and NO3/NO2 along with WTD were also among the top predictors of FCH4 across sites.
 
-Across sites, the RF model explained 83% of observed variance ($r^{2}$) when evaluated against out-of-bag data. Based on the variable importance rankings, $SO_{4}^{2-}$ concentration was the dominant predictor of FCH4 (Figure [-@fig-VarImp]a), indicating that the significant difference in $SO_{4}^{2-}$ concentration across sites (Table [-@tbl-WQ]) was the dominant factor explaining the significant differences in FCH4 across sites. However, other water quality variables, including DOC, pH and NO3/NO2 along with WTD were also in the top 5 top predictors of FCH4 across sites.
+When trained with data within sites, the RF model explained 71% of observed variance at Young when evaluated against OOB data, although the RF model was unable to explain the variance at Hogg ($r^{2}$ = 0). The poor performance at Hogg is likely due to the low FCH4 observed at this site, which are close to the detection limit of the system [REF]. As such, we only consider the variable importance rankings for Young (Figure [-@fig-VarImp]b). While water quality parameters were also dominant predictors of FCH4 at Young, with TP ranked first and $SO_{4}^{2-}$ ranked 4th, TA and GPP were also among the top predictors at Young. Based on the partial dependency plots for the Young RF model, TP appeared to limit FCH4 at concentrations greater than 500 UNITS, while FCH4 followed roughly logistic growth with TA and GPP. 
 
-Within sites, water quality parameters were also the dominant predictors of FCH4 at Hogg and Young, with $SO_{4}^{2-}$ being the top predictor at Hogg (Figure [-@fig-VarImp]c) and TP being the dominant predictor at Young (Figure [-@fig-VarImp]b). While water quality variables and WTD were the top predictors at Hogg and across sites, TA and GPP were also among the top predictors at Young. 
-![Variable importance.](../figures/VarImp_all.png){#fig-VarImp}
+![Variable importance.](../figures/VarImp_all_sig.png){#fig-VarImp}
+
+![Partial dependence plots showing the effects of SO4 used in the random forest models computed across sites & ADD HERE.](../figures/pdp_multipanel.png){#fig-pdp}
+# More on CO2 flux predictors??
+
+RF first (get % vegetation cover from Darian), then Light response curves for veg vs open water.
+
 
 # Discussion
+
+In this study, we conducted the first eddy covariance observations of GHG fluxes from PPR wetlands. Observations were conducted at two wetland sites that differ both in terms of vegetation cover and water quality; Young is a heterogeneous wetland composed of a mix of open water and vegetation and characterized by low sulfate concentrations and higher phosphorus concentrations, while Hogg is a more homogeneous site dominated by emergent vegetation and characterized by high sulfate concentrations. 
+
+While Hogg was a C sink, as reported in previous studies that estimated C sequestration rates using soil cores, C uptake (-35 ± 20 gC m-2 yr-1) was on the low end of values reported in the literature which range from 35 to 610 g C m-2 yr-1 (REFS). Furthermore, we observed that Young was a net C source in over the observation period.  
+
+
+
+CH4 flux - can look at drivers and functional relationships....
+
+
+Wetlands in the PPR are generally observed to have high C sequestration rates and the potential for high CH4 emissions [refs]. 
+
+
+While there have been a growing number of studies focused on C cycling in the PPR wetlands, to date observations of greenhouse gas (GHG) fluxes in the region have only been conducted using chamber-based methods (e.g., Bansal et al., 2016, more refs).
+
+
+Several studies have shown that restored wetlands in the Prairie Pothole Region of North America are particularly proficient at sequestering C
+
+Wetlands in the PPR have been 
+
+
+
+
 
 Notes: 
 
@@ -162,6 +197,8 @@ production   (Gauci   et   al.2004).   A   recent   studyconducted  in  ephemera
 depletion   in   SO42-concentrations   has   also   beendocumented   by   Phipps   (2006)   for   a   permanentwetland  located  in  the  St.  Denis  National  WildlifeArea in Saskatchewan, Canada
 
 Read about P, DOC & pH on FCH4
+
+Sheel's paper...
 
 # P 
 

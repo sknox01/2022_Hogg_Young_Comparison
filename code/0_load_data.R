@@ -16,7 +16,7 @@ p <- sapply(list.files(pattern="potential_rad_generalized.R", path="/Users/sara/
 p <- sapply(list.files(pattern="read_database_generalized.R", path="/Users/sara/Code/Biomet.net/R/database_functions/", full.names=TRUE), source)
 
 # Hogg site
-db_path <- '/Users/sara/Library/CloudStorage/OneDrive-UBC/UBC/Database'
+db_path <- '/Users/sara/Library/CloudStorage/OneDrive-McGillUniversity/Database'
 data.Hogg <- read_data_generalized(db_path,c(2021:2023),"HOGG","Clean/ThirdStage",
                                    c("NEE","NEE_PI_F_MDS","FCH4","FCH4_PI_F_MDS","FCH4_PI_F_RF","H","H_PI_F_MDS","LE","LE_PI_F_MDS",
                                      "GPP_PI_F_DT","GPP_PI_F_NT","Reco_PI_F_DT","Reco_PI_F_NT","NETRAD_1_1_1","P_1_1_1","PA_1_1_1",
@@ -86,7 +86,7 @@ for (i in 1:(length(yrs)-2)) { # UPDATE to -1 once we get 2023 data!
 }
 
 # Young site
-db_path <- '/Users/sara/Library/CloudStorage/OneDrive-UBC/UBC/Database'
+db_path <- '/Users/sara/Library/CloudStorage/OneDrive-McGillUniversity/Database'
 data.Young <- read_data_generalized(db_path,c(2021:2023),"YOUNG","Clean/ThirdStage",
                                     c("NEE","NEE_PI_F_MDS","FCH4","FCH4_PI_F_MDS","FCH4_PI_F_RF","H","H_PI_F_MDS","LE","LE_PI_F_MDS",
                                       "GPP_PI_F_DT","GPP_PI_F_NT","Reco_PI_F_DT","Reco_PI_F_NT","NETRAD_1_1_1","P_1_1_1","PA_1_1_1",
@@ -187,12 +187,15 @@ data.daily <- data %>%
          jday = yday(datetime)) %>%
   group_by(site,year,jday) %>%
   dplyr::summarize(FC_gC = mean(NEE_PI_F_MDS, na.rm = TRUE)*conv_co2,
+                   FC = mean(NEE, na.rm = TRUE),
+                   FC_n = sum(!is.na(NEE)),
                    GPP_PI_F_NT_gC = mean(GPP_PI_F_NT, na.rm = TRUE)*conv_co2,
                    GPP_PI_F_DT_gC = mean(GPP_PI_F_DT, na.rm = TRUE)*conv_co2,
                    Reco_PI_F_NT_gC = mean(Reco_PI_F_NT, na.rm = TRUE)*conv_co2,
                    Reco_PI_F_DT_gC = mean(Reco_PI_F_DT, na.rm = TRUE)*conv_co2,
-                   FCH4_F_gC = mean(FCH4_PI_F_RF, na.rm = TRUE)*conv_ch4,
+                   FCH4_gC = mean(FCH4_PI_F_RF, na.rm = TRUE)*conv_ch4,
                    FCH4 = mean(FCH4, na.rm = TRUE),
+                   FC_n = sum(!is.na(FCH4)),
                    WTD = mean(WTD, na.rm = TRUE),
                    TS = mean(TS_2, na.rm = TRUE),
                    TA = mean(TA_1_1_1, na.rm = TRUE),
@@ -202,8 +205,8 @@ data.daily <- data %>%
                    SW_IN = mean(SW_IN_1_1_1, na.rm = TRUE)*conv_energy,
                    PPFD_IN = mean(PPFD_IN_1_1_1, na.rm = TRUE),
                    P = sum(P_1_1_1, na.rm = TRUE),
-                   LE = mean(LE_PI_F_MDS, na.rm = TRUE)*conv_energy,
-                   H = mean(LE_PI_F_MDS, na.rm = TRUE)*conv_energy,
+                   LE_MJ = mean(LE_PI_F_MDS, na.rm = TRUE)*conv_energy,
+                   H_MJ = mean(LE_PI_F_MDS, na.rm = TRUE)*conv_energy,
                    pH = mean(pH,na.rm = TRUE),
                    pH_interp = mean(pH_interp,na.rm = TRUE),
                    Specific_cond = mean(Specific_cond,na.rm = TRUE),

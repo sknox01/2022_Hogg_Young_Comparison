@@ -12,7 +12,6 @@ library(corrr)
 library(scales)
 library(ggpubr)
 
-# CHANGE UNITS TO nmol m-2 s-1
 # Load data
 load(here("output/daily_data.Rda")) # Average only for days with more than 50% of data
 
@@ -27,6 +26,7 @@ ggplotly(ggplot()+
            geom_point(data = data.daily, aes(x = USTAR,y = FCH4,color = site)))
 
 # from https://github.com/yeonukkim/EC_FCH4_gapfilling
+
 # Select variables for the model - REDO WITH 2022 DATA! Think more about LE, USTAR and Wind direction
 predictors <- c("FCH4","TA","WTD","VPD","USTAR","GPP_PI_F_NT_gC","SO4_pred_interp","TP_interp", "DOC_interp",
 "NO3_NO2_N_interp","NH4_N_interp","pH_interp")
@@ -112,7 +112,7 @@ vi <- tibble::rownames_to_column(vi)
 colnames(vi) <- c("Variable","Importance")
 
 #scale values in 'sales' column to be between 0 and 1
-vi$Importance <- rescale(vi$Importance)*100
+#vi$Importance <- rescale(vi$Importance)*100
 
 # Sort in ascending order
 vi <- vi %>% arrange(-Importance)  
@@ -125,6 +125,7 @@ ggsave("figures/VarImp_Hogg_Young.png", p,units = "cm",height = 7, width = 6, dp
 
 # https://rpubs.com/vishal1310/QuickIntroductiontoPartialDependencePlots
 
+#par.TA<- partial(rf_model, pred.var = c("TA"), train = ML.df, chull = TRUE, ice = TRUE)
 par.TA<- partial(rf_model, pred.var = c("TA"), train = ML.df, chull = TRUE)
 plot.TA<- autoplot(par.TA, contour = TRUE)
 plot.TA
@@ -133,9 +134,12 @@ par.WTD<- partial(rf_model, pred.var = c("WTD"),  train = ML.df, chull = TRUE)
 plot.WTD<- autoplot(par.WTD, contour = TRUE)
 plot.WTD
 
+#par.SO4_pred_interp<- partial(rf_model, pred.var = c("SO4_pred_interp"),  train = ML.df, chull = TRUE, ice = TRUE)
 par.SO4_pred_interp<- partial(rf_model, pred.var = c("SO4_pred_interp"),  train = ML.df, chull = TRUE)
-plot.SO4_pred_interp<- autoplot(par.SO4_pred_interp, contour = TRUE)
+plot.SO4_pred_interp<- autoplot(par.SO4_pred_interp, contour = TRUE) +theme_classic()+xlab('SO4')+ylab('Predicted FCH4')
 plot.SO4_pred_interp
+
+ggsave("figures/pdp_SO4_Hogg_Young.png", plot.SO4_pred_interp,units = "cm",height = 7, width = 6, dpi = 320)
 
 par.TP_interp<- partial(rf_model, pred.var = c("TP_interp"),  train = ML.df, chull = TRUE)
 plot.TP_interp<- autoplot(par.TP_interp, contour = TRUE)
@@ -144,6 +148,12 @@ plot.TP_interp
 par.DOC_interp<- partial(rf_model, pred.var = c("DOC_interp"),  train = ML.df, chull = TRUE)
 plot.DOC_interp<- autoplot(par.DOC_interp, contour = TRUE)
 plot.DOC_interp 
+
+par.NO3_NO2_N_interp<- partial(rf_model, pred.var = c("NO3_NO2_N_interp"),  train = ML.df, chull = TRUE)
+plot.NO3_NO2_N_interp<- autoplot(par.NO3_NO2_N_interp, contour = TRUE)
+plot.NO3_NO2_N_interp 
+
+# Two variable plots if needed - https://journal.r-project.org/archive/2017/RJ-2017-016/RJ-2017-016.pdf
 
 # https://www.sciencedirect.com/science/article/pii/S135223101200533X?casa_token=F34j55vlokYAAAAA:vS0Qk_RH-9FXV2-_gPrfHi16riLJPT8QYoScifNrqSLkuWrgGAiA5uxLdLE4Hw6PDkEWHezYEw
 
@@ -182,7 +192,7 @@ vi <- tibble::rownames_to_column(vi)
 colnames(vi) <- c("Variable","Importance")
 
 #scale values in 'sales' column to be between 0 and 1
-vi$Importance <- rescale(vi$Importance)*100
+#vi$Importance <- rescale(vi$Importance)*100
 
 # Sort in ascending order
 vi <- vi %>% arrange(-Importance)  
@@ -196,20 +206,30 @@ ggsave("figures/VarImp_Young.png", p,units = "cm",height = 7, width = 6, dpi = 3
 # PDP
 
 par.TA.young<- partial(rf_model_young, pred.var = c("TA"), train = ML.df.Young, chull = TRUE)
-plot.TA.young<- autoplot(par.TA.young, contour = TRUE)
+plot.TA.young<- autoplot(par.TA.young, contour = TRUE)+theme_classic()+xlab('TA')+ylab('Predicted FCH4')
 plot.TA.young
+
+ggsave("figures/pdp_TA_interp_young.png", plot.TA.young,units = "cm",height = 7, width = 6, dpi = 320)
+
+par.GPP_PI_F_NT_gC.young<- partial(rf_model_young, pred.var = c("GPP_PI_F_NT_gC"), train = ML.df.Young, chull = TRUE)
+plot.GPP_PI_F_NT_gC.young<- autoplot(par.GPP_PI_F_NT_gC.young, contour = TRUE)+theme_classic()+xlab('GPP')+ylab('Predicted FCH4')
+plot.GPP_PI_F_NT_gC.young
+
+ggsave("figures/pdp_GPP_PI_F_NT_gC_interp_young.png", plot.GPP_PI_F_NT_gC.young,units = "cm",height = 7, width = 6, dpi = 320)
 
 par.WTD.young<- partial(rf_model_young, pred.var = c("WTD"),  train = ML.df.Young, chull = TRUE)
 plot.WTD.young<- autoplot(par.WTD.young, contour = TRUE)
 plot.WTD.young
 
-par.SO4_pred_interp.young<- partial(rf_model_young, pred.var = c("SO4_pred_interp"),  train = ML.df.Young, chull = TRUE)
+par.SO4_pred_interp.young<- partial(rf_model_young, pred.var = c("SO4_pred_interp"),  train = ML.df.Young, chull = TRUE, ice = TRUE)
 plot.SO4_pred_interp.young<- autoplot(par.SO4_pred_interp.young, contour = TRUE)
 plot.SO4_pred_interp.young
 
 par.TP_interp.young<- partial(rf_model_young, pred.var = c("TP_interp"),  train = ML.df.Young, chull = TRUE)
-plot.TP_interp.young<- autoplot(par.TP_interp.young, contour = TRUE)
+plot.TP_interp.young<- autoplot(par.TP_interp.young, contour = TRUE)+theme_classic()+xlab('TP')+ylab('Predicted FCH4')
 plot.TP_interp.young 
+
+ggsave("figures/pdp_TP_interp_young.png", plot.TP_interp.young,units = "cm",height = 7, width = 6, dpi = 320)
 
 par.DOC_interp.young<- partial(rf_model_young, pred.var = c("DOC_interp"),  train = ML.df.Young, chull = TRUE)
 plot.DOC_interp.young<- autoplot(par.DOC_interp.young, contour = TRUE)
@@ -239,7 +259,7 @@ vi <- tibble::rownames_to_column(vi)
 colnames(vi) <- c("Variable","Importance")
 
 #scale values in 'sales' column to be between 0 and 1
-vi$Importance <- rescale(vi$Importance)*100
+#vi$Importance <- rescale(vi$Importance)*100
 
 # Sort in ascending order
 vi <- vi %>% arrange(-Importance)  
@@ -273,7 +293,13 @@ plot.DOC_interp.Hogg<- autoplot(par.DOC_interp.Hogg, contour = TRUE)
 plot.DOC_interp.Hogg 
 
 # Save variable importance scores in one figure
-p <- ggarrange(p_Hogg,p_Young, p_Young_Hogg,ncol = 3, nrow = 1)
+p <- ggarrange(p_Young_Hogg,p_Young,ncol = 2, nrow = 1)
 p
 
-ggsave("figures/VarImp_all.png", p,units = "cm",height = 12, width = 12, dpi = 320)
+ggsave("figures/VarImp_all_sig.png", p,units = "cm",height = 12, width = 12, dpi = 320)
+
+# Save pdp plots in one figure
+p <- ggarrange(plot.SO4_pred_interp,plot.TP_interp.young,plot.TA.young,plot.GPP_PI_F_NT_gC.young,ncol = 2, nrow = 2)
+p
+
+ggsave("figures/pdp_multipanel.png", p,units = "cm",height = 12, width = 12, dpi = 320)
