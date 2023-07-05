@@ -4,8 +4,6 @@ library(ggplot2)   # graphics
 library(here)
 library(ggpubr)
 
-# Clean up figures!
-
 # Explore 30 min data
 load(here("output/30min_data.Rda"))
 
@@ -92,34 +90,39 @@ data.site.annual
 data.site.annual[,c(2,4:length(data.site.annual))] <- round(data.site.annual[,c(2,4:length(data.site.annual))])
 data.site.annual[,3] <- round(data.site.annual[,3],1)
 
-# Uncertainty
-source('/Users/sara/Code/Biomet.net/R/uncertainty/ini_files/HOGG_annual_uncertainty_ini.R')
-source('/Users/sara/Code/Biomet.net/R/uncertainty/flux_uncertainty.R')
+# Only run on local machine with access to the database. No need to run again after saving output/annual_sums.Rda
+run = 0 # Switch to 1 if need to re-run
 
-sdAnnual_gC_Hogg <- mean_sdAnnual_gC
-
-source('/Users/sara/Code/Biomet.net/R/uncertainty/ini_files/YOUNG_annual_uncertainty_ini.R')
-source('/Users/sara/Code/Biomet.net/R/uncertainty/flux_uncertainty.R')
-
-sdAnnual_gC_Young <- mean_sdAnnual_gC
-
-sdAnnual_gC <- rbind(sdAnnual_gC_Hogg,sdAnnual_gC_Young)
-sdAnnual_gC <- cbind(data.frame("site" = c('Hogg','Young')),sdAnnual_gC)
-
-# Create empty table
-nums <- unlist(lapply(data.site.annual, is.numeric), use.names = FALSE)  
-data.site.uncertainty <- data.site.annual
-data.site.uncertainty[ , nums] <- 'TBD'
-
-# Fill in the table
-data.site.uncertainty[,c(2,4,6)] <- round(sdAnnual_gC[,c(5,7,8)]) #Note change column if variables in either table changes & update rounding for FCH4
-
-data.site.uncertainty.num <- t(data.site.uncertainty[,c(2:ncol(data.site.uncertainty))])
-data.site.annual.num <- t(data.site.annual[,c(2:ncol(data.site.annual))])
-
-data.site.annual.all <- as.data.frame(t(as.data.frame(do.call(cbind, lapply(1:ncol(data.site.annual.num), function(i,j) paste0(data.site.annual.num[, i], " ± ", data.site.uncertainty.num[ , i]))))))
-colnames(data.site.annual.all) <- colnames(data.site.annual[,c(2:ncol(data.site.annual))])
-rownames(data.site.annual.all) <- c("Hogg","Young")
-head(data.site.annual.all)
-
-save(data.site.annual.all,file="output/annual_sums.Rda")
+if (run == 1){
+  # Uncertainty
+  source('/Users/sara/Code/Biomet.net/R/uncertainty/ini_files/HOGG_annual_uncertainty_ini.R')
+  source('/Users/sara/Code/Biomet.net/R/uncertainty/flux_uncertainty.R')
+  
+  sdAnnual_gC_Hogg <- mean_sdAnnual_gC
+  
+  source('/Users/sara/Code/Biomet.net/R/uncertainty/ini_files/YOUNG_annual_uncertainty_ini.R')
+  source('/Users/sara/Code/Biomet.net/R/uncertainty/flux_uncertainty.R')
+  
+  sdAnnual_gC_Young <- mean_sdAnnual_gC
+  
+  sdAnnual_gC <- rbind(sdAnnual_gC_Hogg,sdAnnual_gC_Young)
+  sdAnnual_gC <- cbind(data.frame("site" = c('Hogg','Young')),sdAnnual_gC)
+  
+  # Create empty table
+  nums <- unlist(lapply(data.site.annual, is.numeric), use.names = FALSE)  
+  data.site.uncertainty <- data.site.annual
+  data.site.uncertainty[ , nums] <- 'TBD'
+  
+  # Fill in the table
+  data.site.uncertainty[,c(2,4,6)] <- round(sdAnnual_gC[,c(5,7,8)]) #Note change column if variables in either table changes & update rounding for FCH4
+  
+  data.site.uncertainty.num <- t(data.site.uncertainty[,c(2:ncol(data.site.uncertainty))])
+  data.site.annual.num <- t(data.site.annual[,c(2:ncol(data.site.annual))])
+  
+  data.site.annual.all <- as.data.frame(t(as.data.frame(do.call(cbind, lapply(1:ncol(data.site.annual.num), function(i,j) paste0(data.site.annual.num[, i], " ± ", data.site.uncertainty.num[ , i]))))))
+  colnames(data.site.annual.all) <- colnames(data.site.annual[,c(2:ncol(data.site.annual))])
+  rownames(data.site.annual.all) <- c("Hogg","Young")
+  head(data.site.annual.all)
+  
+  save(data.site.annual.all,file="output/annual_sums.Rda")
+}
