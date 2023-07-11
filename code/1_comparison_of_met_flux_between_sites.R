@@ -375,9 +375,9 @@ p1
 ggsave("figures/Met_ts.png", p1,units = "cm",height = 12, width = 12, dpi = 320)
 
 # Focus on GS for now (use only data when WQ data is available)
-# use the period of June 1 to Oct 15 which is the period common to both sites for both years where WQ is also available
-ind_GS <- which(((data.daily$datetime <"2021-06-01 UTC" | data.daily$datetime >"2021-10-15 UTC") & data.daily$year == 2021)|
-                  ((data.daily$datetime <"2022-06-01 UTC" | data.daily$datetime > "2022-10-15 UTC") & data.daily$year == 2022))
+# use the period of June 1 to Oct 1 which is the period common to both sites for both years where WQ is also available
+ind_GS <- which(((data.daily$datetime <"2021-06-01 UTC" | data.daily$datetime >"2021-10-1 UTC") & data.daily$year == 2021)|
+                  ((data.daily$datetime <"2022-06-01 UTC" | data.daily$datetime > "2022-10-1 UTC") & data.daily$year == 2022))
 
 data.daily.GS <- data.daily
 data.daily.GS[ind_GS,!names(data.daily.GS) %in% c("year","site","datetime")] <- NA
@@ -541,11 +541,11 @@ for (i in 1:nvars){
 data.daily$FCH4_mgC <- data.daily$FCH4_gC*1000
 
 # Plot of time series
-#vars <- c("FC_gC","FCH4_mgC","GPP_PI_F_DT_gC","GPP_PI_F_NT_gC","Reco_PI_F_DT_gC","Reco_PI_F_NT_gC")
-vars <- c("FC_gC","FCH4_mgC","GPP_PI_F_NT_gC","Reco_PI_F_NT_gC")
+#vars <- c("NEE_gC","FCH4_mgC","GPP_PI_F_DT_gC","GPP_PI_F_NT_gC","Reco_PI_F_DT_gC","Reco_PI_F_NT_gC")
+vars <- c("NEE_gC","FCH4_mgC","GPP_PI_F_NT_gC","Reco_PI_F_NT_gC")
 nvars <- length(vars)
 plots_ts <- plot.new()
-ylabel <- c(expression(paste("FC ", "(gC ","m"^"-2", " d"^"-1",")")),expression(paste("FCH4 ", "(mgC ","m"^"-2", " d"^"-1",")")),
+ylabel <- c(expression(paste("NEE ", "(gC ","m"^"-2", " d"^"-1",")")),expression(paste("FCH4 ", "(mgC ","m"^"-2", " d"^"-1",")")),
             expression(paste("GPP ", "(gC ","m"^"-2", " d"^"-1",")")),
             expression(paste("RECO ", "(gC ","m"^"-2", " d"^"-1",")")))
 subplot_label <- c("(a)","(b)","(c)","(d)")

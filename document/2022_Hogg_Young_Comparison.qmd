@@ -2,7 +2,7 @@
 editor: source
 date: "`r format(Sys.time(), '%Y-%B-%d')`"
 title: "I need a title here"
-subtitle: "Draft for review - not for citation or circulation"
+subtitle: "Draft for review"
 author: 
    - Sara Helen Knox
    - Department of Geography, University of British Columbia
@@ -91,9 +91,11 @@ Figure [-@fig-met_ts].
 
 ![met_ts.](../figures/Met_ts.png){#fig-met_ts}
 
-Given the proximity of the sites, Hogg and Young experienced similar meteorological conditions; there were no significant differences in mean growing season daily average incoming photosynthetically active radiation (PPFD_IN), air temperature (TA), vapor pressure deficit (VPD), and precipitation (P) between sites. Though, water levels (WTD) at Young were significantly higher than at Hogg, and WTD was significantly higher in 2022 relative to 2021 (Table [-@tbl-MET]; Figure [-@fig-met_ts]). Mean growing season temperatures did not differ significantly between years (Table [-@tbl-MET]). However, the other meteorological variables did differ significantly between years, with higher daily precipitation and VPD observed in 2021 relative to 2022 (Table [-@tbl-MET]).
+Given the proximity of the sites, Hogg and Young experienced similar meteorological conditions; there were no significant differences in mean growing season daily average incoming photosynthetically active radiation (PPFD_IN), air temperature (TA), vapor pressure deficit (VPD), and precipitation (P) between sites. Though, water levels (WTD) at Young were significantly higher than at Hogg, and WTD was significantly higher in 2022 relative to 2021 (Table [-@tbl-MET]; Figure [-@fig-met_ts]). Mean growing season temperatures did not differ significantly between years at the 5% significance level, but TA was significantly higher in the 2021 than 2022 growing season at the 10% significance level (Table [-@tbl-MET]). Other meteorological variables did differ significantly between years at the 5% level, with higher daily precipitation and VPD observed in 2021 relative to 2022 (Table [-@tbl-MET]).
 
 ```{r, echo=FALSE, warning = FALSE, message = FALSE}
+# FULL YEAR VS. GS ONLY?
+
 #| label: tbl-MET
 #| tbl-cap: Growing season mean air temperature (TA) and vapour pressure deficit (VPD), photosynthentically active radiation (PPFD_IN), and water table dept (WTD), and cumulative precipitation at Hogg and Young during 2021 and 2022.
 # Make sure there are no empty lines in the code of the cross referencing won't work!
@@ -125,13 +127,18 @@ Figure out best figure(s) to use. ALL WQ variables?
 
 ![PCA. CHANGE VAR NAMES](../figures/PCA_WQ.png){#fig-PCA}
 
-## GHG fluxes
+## GHG budgets
 
-Both wetland sites were net $CO_{2}$ sinks over the course of the growing season, although net $CO_{2}$ uptake was lower at Young relative to Hogg due to lower GPP at Young (Figure [-@fig-fluxes]). Annually, this resulted in in Hogg being a net $CO_{2}$ sink in 2021-2022, taking up 34 gC $m^{-2}$ $yr^{-1}$, while Young was a net $CO_{2}$ source of 57 gC $m^{-2}$ $yr^{-1}$. Cumulative annual GPP at Hogg was 31% greater than Young, while differences in annual Reco were smaller between sites (~10%) (Table [-@tbl-fluxes]).
+Both wetland sites were net $CO_{2}$ sinks over the course of the growing season, although net $CO_{2}$ uptake was lower at Young relative to Hogg in both 2021 and 2022 due to lower GPP at Young (Figure [-@fig-fluxes]). Annually, this resulted in in Hogg being a weak net $CO_{2}$ sink in 2021 and a strong sink in 2022, taking up 34 and 151 gC $m^{-2}$ $yr^{-1}$, respectively. Conversely, Young was a net $CO_{2}$ source of 57 gC $m^{-2}$ $yr^{-1}$ in 2021, and a weak sink of 31 gC $m^{-2}$ $yr^{-1}$ in 2022. Annual GPP at Hogg was 23-32% greater than Young depending on the year, while differences in annual Reco were smaller between sites (on average ~12%) (Table [-@tbl-fluxes]).
 
-Relative difference in $CH_{4}$ fluxes were even larger between sites (Figure [-@fig-fluxes]; Table [-@tbl-fluxes]). While Young showed a strong seasonal cycle in FCH4 over the course of the year, with daily emissions exceeding >100 mgC $m^{-2}$ $d^{-1}$ during the growing season, emissions at Hogg hovered near zero across the measurement period. As such, cumulative annual FCH4 at Young was >6 time larger at Young relative to Hogg (7.6 versus 1.12 gC $m^{-2}$ $yr^{-1}$, respectively) (Table [-@tbl-fluxes]).
+Large differences in $CH_{4}$ fluxes were also observed between sites (Figure [-@fig-fluxes]; Table [-@tbl-fluxes]). While Young showed a strong seasonal cycle in FCH4 in both years of observation, emissions at Hogg hovered near zero across the measurement period. However, there were significant differences in $CH_{4}$ fluxes at Young between years with higher annual $CH_{4}$ emissions in 2021 relative to 2022 (6.8 versus 4.4 gC $m^{-2}$ $yr^{-1}$, respectively). Hogg also exhibited differences in $CH_{4}$ fluxes between years (1.9 and 2.4 gC $m^{-2}$ $yr^{-1}$ in 2021 and 2022, respectively), although differences were not significant [CONFIRM] (Table [-@tbl-fluxes]).
 
-Combining CO2 and CH4 fluxes, Hogg was GHG neutral, while Young had a positive radiative balance (Table [-@tbl-fluxes]) on a 100-year time scale. 20 & 500 year time scale??
+Combining CO2 and CH4 fluxes, on a 100-year time scale Hogg was GHG neutral in 2021, but a notable GHG sink in 2022 driven by higher net $CO_{2}$ uptake that year. Conversely, Young was always a net GHG source (168 and 616 gC-$CO_{2}$eq $m^{-2}$ $yr^{-1}$ in 2021 and 2022, respectively) due to both higher $CH_{4}$ fluxes and lower net $CO_{2}$ uptake (or even net $CO_{2}$ emissions) at Young relative to Hogg.  
+
+
+Add 20 & 500 year time scale??
+
+ALSO PLOT OF CUMULATIVE FLUXES???
 
 ![Fluxes.](../figures/flux_ts.png){#fig-fluxes}
 
@@ -146,6 +153,11 @@ fluxes_annual <- data.site.annual.all
 knitr::kable(fluxes_annual)
 ```
 
+# Controls on net CO2 exchange
+
+RF first (get % vegetation cover from Darian), then Light response curves for veg vs open water.
+
+
 ## Predictors of FCH4 
 
 Across sites, the RF model explained 83% [insert code for this] of observed variance ($r^{2}$) when evaluated against out-of-bag (OOB) data. Based on the variable importance rankings, $SO_{4}^{2-}$ concentration was the dominant predictor of FCH4 (Figure [-@fig-VarImp]a), indicating that the significant difference in $SO_{4}^{2-}$ concentration across sites (Table [-@tbl-WQ]) was the dominant factor explaining the differences in FCH4 across sites. The partial dependence plot for the RF model indicates that FCH4 is strongly inhibited below $SO_{4}^{2-}$ concentrations greater than ~500 UNITS when the effects of other factors were excluded Figure [-@fig-pdp]a). In addition $SO_{4}^{2-}$, other water quality variables, including DOC, pH and NO3/NO2 along with WTD were also among the top predictors of FCH4 across sites.
@@ -155,10 +167,6 @@ When trained with data within sites, the RF model explained 71% of observed vari
 ![Variable importance.](../figures/VarImp_all_sig.png){#fig-VarImp}
 
 ![Partial dependence plots showing the effects of SO4 used in the random forest models computed across sites & ADD HERE.](../figures/pdp_multipanel.png){#fig-pdp}
-# More on CO2 flux predictors??
-
-RF first (get % vegetation cover from Darian), then Light response curves for veg vs open water.
-
 
 # Discussion
 

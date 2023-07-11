@@ -49,7 +49,7 @@ vars <- c("NEE_PI_F_MDS_cum_sum","FCH4_PI_F_RF_cum_sum","GPP_PI_F_DT_cum_sum",
           "GPP_PI_F_NT_cum_sum","Reco_PI_F_DT_cum_sum","Reco_PI_F_NT_cum_sum")
 nvars <- length(vars)
 plots_cum <- plot.new()
-ylabel <- c(expression(paste("FC ", "(gC ","m"^"-2",")")),expression(paste("FCH4 ", "(gC ","m"^"-2",")")),
+ylabel <- c(expression(paste("NEE ", "(gC ","m"^"-2",")")),expression(paste("FCH4 ", "(gC ","m"^"-2",")")),
             expression(paste("GPP DT ", "(gC ","m"^"-2",")")),expression(paste("GPP NT ", "(gC ","m"^"-2",")")),
             expression(paste("RECO DT ", "(gC ","m"^"-2",")")),expression(paste("RECO NT ", "(gC ","m"^"-2",")")))
 subplot_label <- c("(a)","(b)","(c)","(d)","(e)","(f)")
@@ -75,8 +75,11 @@ p1 <- ggarrange(plotlist=plots_cum,ncol = 1,
 p1
 #ggsave("figures/flux_cum_sum.png", p1,units = "cm",height = 12, width = 12, dpi = 320)
 
+# Group by site & Consider both sites
+data.site <- data[which(data$year_ann == 'Year1' | data$year_ann == 'Year2'),] 
+
 # Annual sums
-data.site.annual <- data.site %>% group_by(site) %>% 
+data.site.annual <- data.site %>% group_by(site,year_ann) %>% 
   summarise(NEE = sum(NEE_PI_F_MDS*12.01*60*30/(10^6), na.rm = TRUE),
             FCH4 = sum(FCH4_PI_F_RF*12.01*60*30/(10^9), na.rm = TRUE),
             GPP_DT = sum(GPP_PI_F_DT*12.01*60*30/(10^6), na.rm = TRUE),
@@ -87,8 +90,8 @@ data.site.annual <- data.site %>% group_by(site) %>%
 data.site.annual$GHG <- (data.site.annual$NEE+data.site.annual$FCH4)*44.01/12.011+data.site.annual$FCH4*16.04/12.011*45
 data.site.annual
 
-data.site.annual[,c(2,4:length(data.site.annual))] <- round(data.site.annual[,c(2,4:length(data.site.annual))])
-data.site.annual[,3] <- round(data.site.annual[,3],1)
+data.site.annual[,c(3,5:length(data.site.annual))] <- round(data.site.annual[,c(3,5:length(data.site.annual))])
+data.site.annual[,4] <- round(data.site.annual[,4],1)
 
 # Only run on local machine with access to the database. No need to run again after saving output/annual_sums.Rda
 run = 0 # Switch to 1 if need to re-run
