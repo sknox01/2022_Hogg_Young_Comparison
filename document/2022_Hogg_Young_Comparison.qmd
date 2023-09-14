@@ -55,23 +55,42 @@ MBPPW1, located at 50.3623˚N, -100.20242˚W, is an isolated cropland marsh in t
 
 MBPPW2, located at 50.3705˚N, -100.5339˚W, is an isolated grassland marsh about 24 km East of MBPPW1. However, this site is much more heterogeneous than MBPPW1 and is characterized by a combination of open water and emergent vegetation. Large mats of submersed macrophytes are found near the open water surface during the growing season, and the emergent vegetation is dominated by Typha spp. This site is characterized by lower sulfate concentrations.
 
-PICS of site and footprint
+PICS of sites and footprints?
 
-CLIMATE NORMALS
+CLIMATE NORMALS?
 
 ## Eddy covariance measurements
 
-## Gap-filling, NEE partitioning, and annual budget computation
-
-net GHG budget
+The eddy covariance method was used to measure continuous, ecosystem-scale fluxes of CO2, CH4, water and energy over the two prairie wetland sites over two full years (June 1, 2021 to June 1, 2023). A flux tower was constructed at each of the sites with sensors mounted at ~4.1m at both sites. These sensors include a 3-dimensional ultrasonic anemometer (RM Young 81000, RM Young Inc.), an open path CO2/H2O infrared gas analyzer (IRGA) (LI-7500A, LI-COR Inc.), and an open path CH4 IRGA (LI-7700, LI-COR Inc.). Data was logged using LI-COR’s Synchronization, Management and Real Time Flux system (Smartflux 3) software and onsite data pre-processing was done using a LI-COR 7550 Analyzer Interface Unit. Final re-processing of the raw flux data measured were processed in EddyPro (LI-COR Inc., US) with an averaging time of 30 minutes. Statistical tests for raw data screening were conducted to remove spikes, data outside plausible limits, skewness and kurtosis (Vickers & Mahrt, 1997). To correct the sonic anemometer tilt relative to the streamline, the double rotation method was applied (Wilczak et al., 2001). Block averaging was used for calculating the turbulent fluctuations, in which the mean values were removed from the scalar timeseries data. Covariance maximization was then used to correct for time lags arising from sensor separation (Fan et al., 1990). Other corrections applied to the data included the WPL correction to account for the effects of air density changes during the averaging period (Webb et al., 1980) and spectral corrections for low-pass and high-pass filtering (Moncrieff et al., 2004). 
 
 ## Supporting measurements
+
+Meteorological variables were measured continuously throughout the study period. Incoming and outgoing shortwave and longwave radiation were measured using a net radiometer (CNR1, Kipp and Zonen, Holland), and incoming and outgoing photosynthetically active radiation (PAR) were measured using a pair of quantum sensors (LI-190, LI-COR, USA) at a height of 3.44 m. Air temperature (TA) and relative humidity (RH) were measured at 2 m (HMP-35 A, Vaisala Oyj, Vantaa, Finland) and precipitation was measured at the EC tower with a tipping bucket rain gauge (TR-525M, Texas Electronics, Dallas, TX, USA). Thermocouples were installed within 3-5 m from the tower to measure soil temperatures (TS) at depths of -10, +10 cm relative to the sediment water -interface. Additionally, a third thermocouple was installed at approximately half the water column depth at each site (HOGG - 25 cm and YOUNG – 40 cm). For the WTD measurements we used Odyssey capacitance water-level loggers (Ody Ltd, 2013). WTD measurements were not collected during the winter while wetlands were frozen. Meteorological measurements were recorded every second (confirm) and averaged over 30-min periods.
+
+## Flux data processing
+
+Filtering of the flux and meteorological data first involved removing data that fell outside of realistic minimum and maximum ranges. Next we removed data coming from poor sensor conditions. These included conditions when the Smartflux system voltage fell below 0 V or rose above 30 V, Data Retention Module voltage fell below 0V or above 50V, Data Acquisition Module temperature fell outside of -60 to 60˚C, and when the LI7700 signal strengths fell below 20%. Additionally, we filtered flux data from measurements when wind directions were between 330˚ and 30˚ to remove turbulence interference from the flux towers which are positioned north of the EC sensors. 
+
+The half-hourly fluxes output from EddyPro were further filtered to exclude low-quality records and measurements made under conditions in which EC assumptions were not fulfilled. The half-hourly fluxes were marked with quality flags following a standard developed by Foken et al. (2004), and records flagged as “2” were discarded. Finally, a minimum friction velocity threshold was applied to remove EC measurements under insufficient turbulence conditions. Friction velocity thresholds were estimated with moving point tests via the REddyProc v 2.2.0 R package (Wuzler et al., 2018). Half-hourly flux measurements whose friction velocities fell beneath the threshold were removed from the final data set. 
+
+NEE, H, and LE, which are strongly controlled by site-level environmental conditions, were gap-filled with the Marginal Distribution Sampling (MDS) technique using REddyProc (Reichstein et al., 2005; Wutzler et al., 2018). Missing measurements in these fluxes were modelled with data calculated by their correlation with their driver variables: Net radiation, TA, and vapour pressure deficit, with gaps in meteorological variables filled by merging data from nearby Environment and Climate Change Canada climate stations. After gap-filling, NEE was partitioned into its two components (i.e., GPP and Reco) using the nighttime partitioning approach implememted using REddyProc (Reichstein et al., 2005; Wutzler et al., 2018). 
+
+FCH4 are more complex to model due to their non-stationary behaviour and temporally non-uniform relationships with their driver variables (Knox et al., 2021; Kim et al., 2002). Random forest modelling was used to gap-fill CH4 following the methods described in Kim et al. (2002). The predictor variables used to train the random forest models were friction velocity, net ecosystem exchange (NEE), LE, H, incoming shortwave radiative flux, TA, relative humidity, vapour pressure deficit, day of year, wind direction, and TS at 40 cm above, 10 cm above and 10 cm below the sediment-water interface. The random forest variable importance graph for MBPPW1 (Figure 6) shows that H, NEE, and 10 cm below sediment-water interface TS were found to be the strongest drivers of FCH4 at MBPPW1.
+
+
+## Uncertainty analysis
+
+## Net C and GHG balance estimation
+
+
 
 ### Water sampling and analysis
 
 Water samples were collected from three different open-water areas within each wetland and then composited into one sample for each wetland site. Samples were collected 10-20 cm below the water surface and care was taken not to sample any sediment or plant material suspended as a result of wading into the sites. The composite sample was split into three fractions that were stored and shipped in coolers. One fraction was sent to ALS laboratories in Winnipeg and analyzed for SO4 using ion chromatography (EPA 300.1 mod) and alkalinity using standard titration procedures (APHA 2320B). The remaining two fractions, one field filtered upon collection using glass fiber filters (GF/C) for dissolved nutrient analysis, and one unfiltered fraction for total nutrient analysis were delivered to the Agriculture and Agri-Food Canada’s Brandon Research and Development Centre in Manitoba, where they were frozen and stored in a cooler until analyzed. A flow analyzer was used to measure NH4+ and NO3- (as NO3- + NO2-) concentrations colorimetically. Total dissolved N and DOC concentrations were determined through the combustion method using a Shimadzu TOC-VCSn analyzer. Total P and TDP concentrations were determined through sulfuric acid/persulfate digestions and colorimetry using the ascorbic acid method. Additionally, water temperature, specific conductivity, dissolved oxygen, pH, and salinity were measured in-situ using handheld multi-probes.
 
 ABS 280 - does higher mean more recalcitrant DOC?
+
+samples were collected on xxx days and linearly interpolated between observations
 
 ## Statistical methods
 
@@ -127,7 +146,7 @@ Figure out best figure(s) to use. ALL WQ variables?
 
 ![PCA. CHANGE VAR NAMES](../figures/PCA_WQ.png){#fig-PCA}
 
-## GHG budgets
+## GHG budgets - REVISE WHEN WE GET FULL YEAR OF DATA!
 
 Both wetland sites were net $CO_{2}$ sinks over the course of the growing season, although net $CO_{2}$ uptake was lower at Young relative to Hogg in both 2021 and 2022 due to lower GPP at Young (Figure [-@fig-fluxes]). Annually, this resulted in in Hogg being a weak net $CO_{2}$ sink in 2021 and a strong sink in 2022, taking up 34 and 151 gC $m^{-2}$ $yr^{-1}$, respectively. Conversely, Young was a net $CO_{2}$ source of 57 gC $m^{-2}$ $yr^{-1}$ in 2021, and a weak sink of 31 gC $m^{-2}$ $yr^{-1}$ in 2022. Annual GPP at Hogg was 23-32% greater than Young depending on the year, while differences in annual Reco were smaller between sites (on average ~12%) (Table [-@tbl-fluxes]).
 
@@ -158,7 +177,7 @@ knitr::kable(fluxes_annual)
 RF first (get % vegetation cover from Darian), then Light response curves for veg vs open water.
 
 
-## Predictors of FCH4 
+## Predictors of FCH4 - ADD Cond or salinity?
 
 Across sites, the RF model explained 83% [insert code for this] of observed variance ($r^{2}$) when evaluated against out-of-bag (OOB) data. Based on the variable importance rankings, $SO_{4}^{2-}$ concentration was the dominant predictor of FCH4 (Figure [-@fig-VarImp]a), indicating that the significant difference in $SO_{4}^{2-}$ concentration across sites (Table [-@tbl-WQ]) was the dominant factor explaining the differences in FCH4 across sites. The partial dependence plot for the RF model indicates that FCH4 is strongly inhibited below $SO_{4}^{2-}$ concentrations greater than ~500 UNITS when the effects of other factors were excluded Figure [-@fig-pdp]a). In addition $SO_{4}^{2-}$, other water quality variables, including DOC, pH and NO3/NO2 along with WTD were also among the top predictors of FCH4 across sites.
 
@@ -221,6 +240,33 @@ Moreover, increased P loading to wetlands may change soil microbial community an
 See 4. Discussions
 
 This finding implies that elevated P loading would exert a consistent suppression of CH4 emission in temperate freshwater wetlands.
+
+Matt's paper
+Salinity can also interact with other key CH4 controls, with organic C availability modulating the SO42- inhibition of methanogenesis12,19,25,26, and nutrient availability changing with salt content due to sorption to sediments19,27. 
+
+We show that salinity restricts CH4 emissions in small lentic waterbodies, especially through ebullition, leading existing freshwater models to overpredict emissions
+
+We show that salinity is a key driver of CH4, interacting with organic matter (OM) content to shape surface CH4 partial pressure (pCH4). 
+
+As salinity increases, individual ions (not necessarily SO42-) with greater binding capacities can replace N bound in sediment complexes, and liberate NH4+ which is a precursor to important terminal electron acceptors (NO32- and NO2-) that fuel AOM (detailed above). 
+
+As such, salinity is a useful empirical predictor of CH4 content in part because it reflects the geochemical limitations that can be imposed on primary producer growth and organic matter supply to methanogens. 
+
+the DOC (mg L-1) to salinity (ppt) ratio -> DOC modulates the influence of salinity
+
+suggests that organic-rich systems (with elevated DOC concentrations) can compensate for the inhibitory effect of salinity on methanogenesis. Similarly, pCH4 correlated with ratios of TN and TP to salinity (Fig. S3b,c), indicating that DOC was a proxy for OM content and ecosystem productivity
+
+In line with previous research, the correlation with DOC likely reflects the absence of competition for organic substrate between methanogenesis and other reduction pathways when OM is abundant or when the low concentration of other electron acceptors limits alternative redox processes12,19,25. 
+
+Most sampled sites (78%) in the Prairie landscape exhibited moderate salinity < 1 ppt (Fig. S1, Table S1), a range within which even modest salinity changes from year to year45,49 could have a substantial effect on CH4 dynamics (Fig. 1c). For example, at the same DOC concentration (10 mg L), a 0.5 ppt increase in salinity at low salinity conditions (0.5 ppt) results in a 35% reduction of pCH4, (710 to 458 ppm) while a 0.5 ppt increase in salinity from 3.5 to 4 ppt only decreased pCH4 by 8% (207 to 190 ppm) (Fig. 1c). -> Compare salinity response at our sites!
+
+Past work has emphasized the need for detailed spatio-temporal sampling to constrain uncertainties in flux budgets for single-system research51. 
+
+Were salinity not a controlling factor, we would have anticipated consistently high rates of CH4 emissions from both wetland ecosystems, given the hypereutrophic status of both sites, and the DOC-rich surface water environments (Table S4). 
+
+Overall, our eddy-covariance measurements provide independent support for the Prairies-wide inverse relationship that we observed between salinity and CH4 emissions. 
+
+In the Canadian Prairies, SO42- concentrations have increased in 64 % of the 14 monitored lakes for which data are available in Saskatchewan over the past 30 years (Fig. S8). This is consistent with previous findings that, despite high-local variability, many Prairie waters are becoming more saline42,68. This may in part be linked to rapid increases in the application of S-based fertilizers in agricultural landscapes69, which may in turn lead to enhanced SO42- content and salinity in receiving waters (though such a mechanistic link remains unconfirmed). 
 
 # References {.unnumbered}
 

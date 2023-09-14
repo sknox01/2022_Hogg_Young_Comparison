@@ -34,11 +34,11 @@ load(here("output/daily_data.Rda"))
 
 # Trim data frame to start on June 1, 2021 
 ind_s_Young <- which(data.daily$datetime == as.POSIXct("2021-06-01",tz = 'UTC') & data.daily$site == 'Young')
-ind_Young <- which(data.daily$site == 'Young' & data.daily$year < 2023)
+ind_Young <- which(data.daily$site == 'Young' & data.daily$datetime <= as.POSIXct("2023-06-01",tz = 'UTC'))
 ind_Young_last <- ind_Young[length(ind_Young)]
 
 ind_s_Hogg <- which(data.daily$datetime == as.POSIXct("2021-06-01",tz = 'UTC') & data.daily$site == 'Hogg')
-ind_Hogg <- which(data.daily$site == 'Hogg' & data.daily$year < 2023)
+ind_Hogg <- which(data.daily$site == 'Hogg' & data.daily$datetime <= as.POSIXct("2023-06-01",tz = 'UTC'))
 ind_Hogg_last <- ind_Hogg[length(ind_Hogg)]
 
 data.daily <- data.daily[c(ind_s_Hogg:ind_Hogg_last,ind_s_Young:ind_Young_last), ] 

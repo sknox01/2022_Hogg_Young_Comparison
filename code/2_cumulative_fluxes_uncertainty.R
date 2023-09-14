@@ -29,7 +29,8 @@ data$year_ann[year1_s_Hogg:year1_e_Hogg] <- 'Year1'
 data$year_ann[year2_s_Hogg:year2_e_Hogg] <- 'Year2'
 
 # Group by site & Consider only Year1 for now
-data.site <- data[which(data$year_ann == 'Year1'),] 
+#data.site <- data[which(data$year_ann == 'Year1'),] 
+data.site <- data
 
 # Cumulative plots
 # Color palette
@@ -37,13 +38,15 @@ colors_sites <- c("#999999", "#E69F00", "#56B4E9", "#009E73",
                   "#F0E442", "#0072B2", "#D55E00", "#CC79A7",
                   '#257ABA', '#C9B826') 
 
-data.site.cum_sum <- data.site %>% group_by(site) %>% 
+data.site.cum_sum <- data.site %>% group_by(site,year_ann) %>% 
   mutate(NEE_PI_F_MDS_cum_sum = cumsum(NEE_PI_F_MDS*12.01*60*30/(10^6)),
          FCH4_PI_F_RF_cum_sum = cumsum(FCH4_PI_F_RF*12.01*60*30/(10^9)),  
          GPP_PI_F_DT_cum_sum = cumsum(GPP_PI_F_DT*12.01*60*30/(10^6)),
          GPP_PI_F_NT_cum_sum = cumsum(GPP_PI_F_NT*12.01*60*30/(10^6)),
          Reco_PI_F_DT_cum_sum = cumsum(Reco_PI_F_DT*12.01*60*30/(10^6)),
          Reco_PI_F_NT_cum_sum = cumsum(Reco_PI_F_NT*12.01*60*30/(10^6)))
+
+data.site.cum_sum$DOY <- NA
 
 vars <- c("NEE_PI_F_MDS_cum_sum","FCH4_PI_F_RF_cum_sum","GPP_PI_F_DT_cum_sum",
           "GPP_PI_F_NT_cum_sum","Reco_PI_F_DT_cum_sum","Reco_PI_F_NT_cum_sum")
