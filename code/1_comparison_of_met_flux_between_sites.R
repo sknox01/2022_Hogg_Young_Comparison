@@ -3,29 +3,29 @@ library(lubridate) # work with dates
 library(dplyr)     # data manipulation (filter, summarize, mutate)
 library(ggplot2)   # graphics
 library(gridExtra) # tile several plots next to each other
-library(plotly)   # Allows you to zoom in on plots
-library(openair) #For plotting wind and pollution roses (to explore the relationship between fluxes and wind direction)
+library(plotly)    # Allows you to zoom in on plots
+library(openair)   #For plotting wind and pollution roses (to explore the relationship between fluxes and wind direction)
 library(wesanderson)
-library(ggsignif)
-library(ggpubr)
-library(hms)
-library(zoo)
-library(here)
-library(psych)
-library(REdaS)
-library(vegan)
-library(reshape)
-library(rstatix)
-library(multcompView)
-library(ggpubr)
-library(cowplot)
-library(emmeans)
-library(multcomp)
-library(kableExtra)
-library(factoextra)
-library(rstatix)
-library(car)
-library(ggplotify)
+# library(ggsignif)
+# library(ggpubr)
+# library(hms)
+# library(zoo)
+# library(here)
+# library(psych)
+# library(REdaS)
+# library(vegan)
+# library(reshape)
+# library(rstatix)
+# library(multcompView)
+# library(ggpubr)
+# library(cowplot)
+# library(emmeans)
+# library(multcomp)
+# library(kableExtra)
+# library(factoextra)
+# library(rstatix)
+# library(car)
+# library(ggplotify)
 
 # CREATE FUNCTIONS!
 
@@ -67,7 +67,7 @@ data.daily.WQ.mean[,vars] <- round(data.daily.WQ.mean[,vars])
 save(data.daily.WQ.mean,file="output/daily_WQ_mean.Rda")
 
 # PCA of WQ parameters 
-# 1. Extra WQ parameters 
+# 1. Extract WQ parameters (REDO ONCE NO3_NO2 & NH4 are available for both years)
 vars <- c('site','FCH4_gC','pH','SO4','Specific_cond','DOC','TDN','NO3_NO2_N','NH4_N','DRP','TDP','TP','ABS_280nm')
 
 # Extract only variables of interest and non-NA data

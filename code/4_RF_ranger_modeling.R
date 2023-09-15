@@ -21,6 +21,9 @@ data.daily$FCH4[data.daily$FCH4_n<48/2] <- NA
 # Calculate salinity (ppt) from specific conductivity data
 data.daily$salinity_model <- data.daily$Specific_cond_interp*0.0005 - 0.0224
 
+# Create DOC/SO4 variable
+data.daily$DOC_SO4_interp <- data.daily$DOC_interp/data.daily$SO4_pred_interp
+
 # Only consider fluxes for days with more than 50% of data
 
 # plot daily data
@@ -28,23 +31,46 @@ ggplotly(ggplot()+
            geom_point(data = data.daily, aes(x = datetime,y = FCH4,color = site)))
 
 ggplotly(ggplot()+
-           geom_point(data = data.daily, aes(x = datetime,y = NO3_NO2_N_interp,color = site)))
+           geom_point(data = data.daily, aes(x = DOC_SO4_interp,y = FCH4,color = site)))
 
 ggplotly(ggplot()+
-           geom_point(data = data.daily, aes(x = datetime,y = TP_interp,color = site)))
+           geom_point(data = data.daily, aes(x = DOC_interp,y = FCH4,color = site)))
+
+ggplotly(ggplot()+
+           geom_point(data = data.daily, aes(x = TDN_interp,y = FCH4,color = site)))
+
+ggplotly(ggplot()+
+           geom_point(data = data.daily, aes(x = SO4_pred_interp,y = FCH4,color = site)))
+
+ggplotly(ggplot()+
+           geom_point(data = data.daily, aes(x = pH_interp,y = FCH4,color = site)))
+
+ggplotly(ggplot()+
+           geom_point(data = data.daily, aes(x = SO4_pred,y = DOC,color = site)))
+
+ggplotly(ggplot()+
+           geom_point(data = data.daily, aes(x = datetime,y = SO4_pred_interp,color = site)))
 
 # For 2021 only --------------------------------------------------------------------------------------------
 
+## ADD SALINITY/COND!
 # Select variables for the model - REDO WITH 2022 DATA! Think more about LE, USTAR and Wind direction
-predictors_model <- c("FCH4","TA","WTD","VPD","USTAR","GPP_PI_F_NT_gC","SO4_pred_interp","TP_interp", "DOC_interp",
-"NO3_NO2_N_interp","NH4_N_interp","pH_interp")
+#predictors_model <- c("FCH4","TA","WTD","VPD","USTAR","GPP_PI_F_NT_gC","SO4_pred_interp","TP_interp", "DOC_interp",
+#"NO3_NO2_N_interp","NH4_N_interp","pH_interp")
+
+predictors_model <- c("FCH4","TA","WTD","VPD","USTAR","GPP_PI_F_NT_gC","TP_interp",
+                      "Specific_cond_interp")
+
 
 data.daily.model <- na.omit(data.daily[,c(predictors_model,"site","year","datetime")]) # Remove all missing data
 data.daily.model$site <- as.factor(data.daily.model$site)
 data.daily.model$year <- as.factor(data.daily.model$year)
 
-predictors <- c("FCH4","TA","WTD","VPD","USTAR","GPP","SO4","TP", "DOC",
-                "NO3_NO2","NH4","pH")
+#predictors <- c("FCH4","TA","WTD","VPD","USTAR","GPP","SO4","TP", "DOC",
+#                "NO3_NO2","NH4","pH")
+
+predictors <- c("FCH4","TA","WTD","VPD","USTAR","GPP","TP",
+                "Cond")
 
 colnames(data.daily.model)[1:length(predictors_model)] <- predictors
 
@@ -135,7 +161,7 @@ p_Young_Hogg <- ggplot(vi, aes(reorder(Variable, Importance, sum), Importance)) 
   geom_col()+ coord_flip()+theme_classic()+xlab('')
 p_Young_Hogg
  
-#ggsave("figures/VarImp_Hogg_Young.png", p,units = "cm",height = 7, width = 6, dpi = 320)
+ggsave("figures/VarImp_Hogg_Young.png", p_Young_Hogg,units = "cm",height = 7, width = 6, dpi = 320)
 
 # https://rpubs.com/vishal1310/QuickIntroductiontoPartialDependencePlots
 

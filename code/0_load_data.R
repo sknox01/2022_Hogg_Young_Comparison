@@ -60,7 +60,6 @@ data.Hogg$year <- year(data.Hogg$datetime)
 yrs <- unique(data.Hogg$year)
 yrs <- yrs[which(!is.na(unique(data.Hogg$year)))]
 
-# UPDATE to -1 once we get 2023 data!
 for (i in 1:(length(yrs)-2)) { #n-1 years since the last timestep is the first day of the following year
   NonNAindex <- which(!is.na(data.Hogg$WTD) & data.Hogg$year == yrs[i])
   firstNonNA <- min(NonNAindex)
