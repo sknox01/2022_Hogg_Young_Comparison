@@ -10,13 +10,13 @@ library(zoo)
 library(here)
 
 # Load function to calculate potential radiation
-p <- sapply(list.files(pattern="potential_rad_generalized.R", path="/Users/sara/Code/Biomet.net/R/data_visualization/", full.names=TRUE), source)
+p <- sapply(list.files(pattern="potential_rad_generalized.R", path="/Users/saraknox/Code/Biomet.net/R/data_visualization/", full.names=TRUE), source)
 
 # Load function to load data from the database
-p <- sapply(list.files(pattern="read_database_generalized.R", path="/Users/sara/Code/Biomet.net/R/database_functions/", full.names=TRUE), source)
+p <- sapply(list.files(pattern="read_database_generalized.R", path="/Users/saraknox/Code/Biomet.net/R/database_functions/", full.names=TRUE), source)
 
 # Hogg site
-db_path <- '/Users/sara/Library/CloudStorage/OneDrive-McGillUniversity/Database'
+db_path <- '/Users/saraknox/Code/local_data_cleaning/Database'
 data.Hogg <- read_data_generalized(db_path,c(2021:2023),"HOGG","Clean/ThirdStage",
                                    c("NEE","NEE_PI_F_MDS","FCH4","FCH4_PI_F_MDS","FCH4_PI_F_RF","H","H_PI_F_MDS","LE","LE_PI_F_MDS",
                                      "GPP_PI_F_DT","GPP_PI_F_NT","Reco_PI_F_DT","Reco_PI_F_NT","NETRAD_1_1_1","P_1_1_1","PA_1_1_1",

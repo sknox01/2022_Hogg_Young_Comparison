@@ -3,7 +3,5 @@
 .RData
 .Ruserdata
 .DS_Store
-code/Exploratory/
-code/for_others/
-code/From_Matt/
-output/Other/
+**/.DS_Store
+Code/Ma_code
